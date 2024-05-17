@@ -4,9 +4,14 @@
 #include "constantes.h"
 #include "estructuras.h"
 
+//Macros utiles
 #define CAP_INI 10
 #define FACTOR_INCR 1.5
+
+//Macros de errores
+#define SIN_MEMORIA 5
 #define SIN_PARAMETROS 15
+
 
 typedef struct{
     void* vec;
