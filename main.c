@@ -4,6 +4,6 @@
 
 int main(int argc, char* argv[])
 {
-    solucion(&argc, argv);
+    solucion(argc, argv);
     return TODO_OK;
 }
