@@ -21,7 +21,9 @@
 
 #include "funciones_estudiante.h"
 
-bool __ampliarCapVector(Vector* vec);
+bool __ampliarCapVector(Vector*);
+bool __ampliarString(String*,size_t);
+size_t largoString(const char*);
 
 bool crearString(String* vec){
     vec->vec = malloc(char);
@@ -30,6 +32,23 @@ bool crearString(String* vec){
         return SIN_MEMORIA;
 
     vec->ce=0;
+
+    return TODO_OK;
+}
+
+bool insertarString(String* vec,const char* pal){
+    size_t tam = largoString(pal);
+
+    if(!__ampliarString(vec->vec,tam))
+        return SIN_MEMORIA;
+    char* j=vec->vec;
+
+    for(size_t i=0;i<=tam;i++){
+        *j=pal[i];
+        j++;
+    }
+
+    vec->ce=tam;
 
     return TODO_OK;
 }
@@ -73,15 +92,24 @@ bool __ampliarCapVector(Vector* vec){
 
 bool __ampliarString(String* vec, tam){
 
-    void* nvec=realloc(vec->vec,cap*vec->tamElem);
+    void* nvec=realloc(vec->vec,tam);
 
     if(!nvec)
         return SIN_MEMORIA;
 
     vec->vec=nvec;
-    vec->cap=cap;
+    vec->ce=tam;
 
     return TODO_OK;
+}
+
+size_t largoString(const char* pal){
+    size_t tam=0;
+
+    while(pal[tam]!="\0")
+        tam++;
+
+    return tam;
 }
 
 void vectorElim(Vector* vec){
