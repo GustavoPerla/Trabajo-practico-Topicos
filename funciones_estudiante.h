@@ -1,6 +1,13 @@
 #ifndef FUNCIONES_ESTUDIANTE_H_INCLUDED
 #define FUNCIONES_ESTUDIANTE_H_INCLUDED
 
+//Bibliotecas
+#include <stdbool.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <stdlib.h>
+
+//Headers
 #include "constantes.h"
 #include "estructuras.h"
 

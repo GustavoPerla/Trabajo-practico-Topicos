@@ -27,29 +27,66 @@ bool crearVector(Vector* vec,size_t tamElem){
     vec->vec = malloc(CAP_INI*tamElem);
 
     if(!vec->vec)
-        return false;
+        return SIN_MEMORIA;
+
     vec->cap=CAP_INI;
     vec->ce=0;
     vec->tamElem=tamElem;
 
-    return true;
+    return TODO_OK;
 }
 
-bool vectorInsertarFinal(Vector* vec){
+bool vectorInsertarFinal(Vector* vec,void elem){
+    if(vec->cap==vec->ce)
+        if(!__ampliarCapVector(vec))
+            return SIN_MEMORIA;
 
+    *(vec->vec+(vec->ce*vec->tamElem)) = elem;
+    vec->ce++;
+
+    return TODO_OK;
 }
 
 bool __ampliarCapVector(Vector* vec){
-    size_t cap = vec->cap*vec->tamElem
+    size_t cap = vec->cap*FACTOR_INCR;
     void* nvec=realloc(vec->vec,cap*vec->tamElem);
 
     if(!nvec)
-        return false;
+        return SIN_MEMORIA;
 
     vec->vec=nvec;
     vec->cap=cap;
 
-    return true;
+    return TODO_OK;
+}
+
+void** matrizCrear(size_t filas, size_t columnas,size_t tamElem){
+    void** matriz = malloc(filas*sizeof(void*)); // Creo primer vector de filas
+
+    if(!matriz)// Mira que no falle el malloc
+        return NULL;
+
+    void** ult=matriz+filas-1;// Ultimo elemento del vector de filas
+
+    for(void** i=matriz;i<=ult;i++){
+        *i= malloc(columnas*tamElem);// Creo los vectores de columnas
+
+        if(!i){// Prueba que no falle el malloc de las columnas, en tal caso borra todo lo creado hasta el momento
+            matrizElim(matriz,i-matriz);
+            return NULL;
+        }
+    }
+
+    return matriz;
+}
+
+void matrizElim(void** mat,const size_t fil){
+    void** ult= mat+fil-1;
+
+    for(void** i=mat;i<=ult;i++){
+        free(*i);
+    }
+    free(mat);
 }
 
 void solucion(int argc, char* argv[])
@@ -58,6 +95,8 @@ void solucion(int argc, char* argv[])
         puts("No hay Argumentos suficientes");
         return SIN_PARAMETROS;
     }
+
+
 
 
 }
