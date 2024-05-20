@@ -23,6 +23,17 @@
 
 bool __ampliarCapVector(Vector* vec);
 
+bool crearString(String* vec){
+    vec->vec = malloc(char);
+
+    if(!vec->vec)
+        return SIN_MEMORIA;
+
+    vec->ce=0;
+
+    return TODO_OK;
+}
+
 bool crearVector(Vector* vec,size_t tamElem){
     vec->vec = malloc(CAP_INI*tamElem);
 
@@ -41,7 +52,7 @@ bool vectorInsertarFinal(Vector* vec,void* elem){
         if(!__ampliarCapVector(vec))
             return SIN_MEMORIA;
 
-    *(vec->vec+(vec->ce*vec->tamElem)) = elem;
+    *(vec->vec+(vec->ce*vec->tamElem)) = *elem;
     vec->ce++;
 
     return TODO_OK;
@@ -49,6 +60,19 @@ bool vectorInsertarFinal(Vector* vec,void* elem){
 
 bool __ampliarCapVector(Vector* vec){
     size_t cap = vec->cap*FACTOR_INCR;
+    void* nvec=realloc(vec->vec,cap*vec->tamElem);
+
+    if(!nvec)
+        return SIN_MEMORIA;
+
+    vec->vec=nvec;
+    vec->cap=cap;
+
+    return TODO_OK;
+}
+
+bool __ampliarString(String* vec, tam){
+
     void* nvec=realloc(vec->vec,cap*vec->tamElem);
 
     if(!nvec)
@@ -105,7 +129,9 @@ void solucion(int argc, char* argv[])
 
     Vector funci, archBMP;
     crearVector(&funci,sizeof(short int));
-    crearVector(&archBMP,char);
+
+    crearString(&archBMP);
+
     for(short int i=0;i<argc;i++){
         if(argv[i][0]=='-'){
             opcion = tipoFuncionlidad(&argc,argv);
@@ -114,7 +140,7 @@ void solucion(int argc, char* argv[])
             else
                 return FUNC_INEXI
         }else
-            vectorInsertarFinal(&archBMP,&argv[i]);
+            vectorInsertarFinal(&archBMP,argv[i]);
     }
 
 
