@@ -18,6 +18,7 @@
 //Macros de errores
 #define SIN_MEMORIA 5
 #define SIN_PARAMETROS 15
+#define FUNC_INEXI
 
 
 typedef struct{
@@ -26,6 +27,11 @@ typedef struct{
     size_t cap;
     size_t tamElem;
 }Vector;
+
+typedef struct{
+    void* vec;
+    size_t ce;
+}String;
 
 void solucion(int* argc, char* argv[]);
 

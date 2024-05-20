@@ -36,7 +36,7 @@ bool crearVector(Vector* vec,size_t tamElem){
     return TODO_OK;
 }
 
-bool vectorInsertarFinal(Vector* vec,void elem){
+bool vectorInsertarFinal(Vector* vec,void* elem){
     if(vec->cap==vec->ce)
         if(!__ampliarCapVector(vec))
             return SIN_MEMORIA;
@@ -58,6 +58,13 @@ bool __ampliarCapVector(Vector* vec){
     vec->cap=cap;
 
     return TODO_OK;
+}
+
+void vectorElim(Vector* vec){
+    free(vec->vec);
+    vec->cap = NULL;
+    vec->ce = NULL;
+    vec->tamElem = NULL;
 }
 
 void** matrizCrear(size_t filas, size_t columnas,size_t tamElem){
@@ -91,11 +98,24 @@ void matrizElim(void** mat,const size_t fil){
 
 void solucion(int argc, char* argv[])
 {
-    if(argc<=1){
+    if(argc<=1){ // Pregunto cuantos argumentos hay
         puts("No hay Argumentos suficientes");
         return SIN_PARAMETROS;
     }
 
+    Vector funci, archBMP;
+    crearVector(&funci,sizeof(short int));
+    crearVector(&archBMP,char);
+    for(short int i=0;i<argc;i++){
+        if(argv[i][0]=='-'){
+            opcion = tipoFuncionlidad(&argc,argv);
+            if(opcion!=-1)
+                vectorInsertarFinal(&funci,&opcion);
+            else
+                return FUNC_INEXI
+        }else
+            vectorInsertarFinal(&archBMP,&argv[i]);
+    }
 
 
 

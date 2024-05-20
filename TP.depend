@@ -1,0 +1,18 @@
+# depslib dependency file v1.0
+1715971902 source:/home/tyos/Escritorio/Trabajo-practico-Topicos/main.c
+	<stdio.h>
+	"funciones_estudiante.h"
+	"constantes.h"
+
+1716181610 /home/tyos/Escritorio/Trabajo-practico-Topicos/funciones_estudiante.h
+	<stdbool.h>
+	<stdio.h>
+	<stddef.h>
+	<stdlib.h>
+	"constantes.h"
+	"estructuras.h"
+
+1715971896 /home/tyos/Escritorio/Trabajo-practico-Topicos/constantes.h
+
+1715971899 /home/tyos/Escritorio/Trabajo-practico-Topicos/estructuras.h
+
