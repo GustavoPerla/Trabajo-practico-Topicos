@@ -23,7 +23,7 @@
 
 bool __ampliarCapVector(Vector*);
 bool __ampliarString(String*,size_t);
-size_t largoString(const void*);
+size_t largoString(void*);
 
 bool crearString(String* vec){
     vec->vec = malloc(sizeof(char));
@@ -104,7 +104,7 @@ bool __ampliarString(String* vec,size_t tam){
     return TODO_OK;
 }
 
-size_t largoString(const void* pal){
+size_t largoString(void* pal){
     size_t tam=0;
     char* j = pal;
     while(*j!='\0'){

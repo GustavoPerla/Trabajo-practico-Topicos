@@ -6,7 +6,8 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <String.h>
+#include <string.h>
+
 
 //Headers
 #include "constantes.h"
@@ -35,7 +36,7 @@ typedef struct{
 }String;
 
 void solucion(int argc, char* argv[]);
-size_t largoString(const void*);
+size_t largoString(void*);
 
 
 #endif // FUNCIONES_ESTUDIANTE_H_INCLUDED

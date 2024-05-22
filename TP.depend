@@ -1,14 +1,15 @@
 # depslib dependency file v1.0
-1715971902 source:/home/tyos/Escritorio/Trabajo-practico-Topicos/main.c
+1715263681 source:/home/tyos/Escritorio/Trabajo-practico-Topicos/main.c
 	<stdio.h>
 	"funciones_estudiante.h"
 	"constantes.h"
 
-1716181610 /home/tyos/Escritorio/Trabajo-practico-Topicos/funciones_estudiante.h
+1716407861 /home/tyos/Escritorio/Trabajo-practico-Topicos/funciones_estudiante.h
 	<stdbool.h>
 	<stdio.h>
 	<stddef.h>
 	<stdlib.h>
+	<string.h>
 	"constantes.h"
 	"estructuras.h"
 
@@ -35,5 +36,8 @@
 1715986055 c:\users\usuario\onedrive - universidad nacional de la matanza\escritorio\facultad\topicos de la programacion\tp\tp\estructuras.h
 
 1716355924 source:c:\users\usuario\onedrive - universidad nacional de la matanza\escritorio\facultad\topicos de la programacion\tp\tp\funciones_estudiante.c
+	"funciones_estudiante.h"
+
+1716407851 source:/home/tyos/Escritorio/Trabajo-practico-Topicos/funciones_estudiante.c
 	"funciones_estudiante.h"
 
