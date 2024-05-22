@@ -23,7 +23,7 @@
 
 bool __ampliarCapVector(Vector*);
 bool __ampliarString(String*,size_t);
-size_t largoString(const char*);
+size_t largoString(const void*);
 
 bool crearString(String* vec){
     vec->vec = malloc(char);
@@ -39,12 +39,12 @@ bool crearString(String* vec){
 bool insertarString(String* vec,const char* pal){
     size_t tam = largoString(pal);
 
-    if(!__ampliarString(vec->vec,tam))
+    if(__ampliarString(vec->vec,tam))
         return SIN_MEMORIA;
-    char* j=vec->vec;
+    char* j = vec->vec;
 
     for(size_t i=0;i<=tam;i++){
-        *j=pal[i];
+        (*j)=pal[i];
         j++;
     }
 
@@ -103,11 +103,13 @@ bool __ampliarString(String* vec, tam){
     return TODO_OK;
 }
 
-size_t largoString(const char* pal){
+size_t largoString(const void* pal){
     size_t tam=0;
-
-    while(pal[tam]!="\0")
+    char* j = pal;
+    while(*j!='\0'){
         tam++;
+        j++;
+    }
 
     return tam;
 }
@@ -117,6 +119,12 @@ void vectorElim(Vector* vec){
     vec->cap = NULL;
     vec->ce = NULL;
     vec->tamElem = NULL;
+}
+
+void stringEliminar(String* vec){
+    free(vec->vec);
+    vec->vec=NULL;
+    vec->ce=NULL;
 }
 
 void** matrizCrear(size_t filas, size_t columnas,size_t tamElem){
