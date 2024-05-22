@@ -26,7 +26,7 @@ bool __ampliarString(String*,size_t);
 size_t largoString(const void*);
 
 bool crearString(String* vec){
-    vec->vec = malloc(char);
+    vec->vec = malloc(sizeof(char));
 
     if(!vec->vec)
         return SIN_MEMORIA;
@@ -66,12 +66,13 @@ bool crearVector(Vector* vec,size_t tamElem){
     return TODO_OK;
 }
 
-bool vectorInsertarFinal(Vector* vec,void* elem){
+bool vectorInsertarFinal(Vector* vec,const void* elem){
     if(vec->cap==vec->ce)
         if(!__ampliarCapVector(vec))
             return SIN_MEMORIA;
 
-    *(vec->vec+(vec->ce*vec->tamElem)) = *elem;
+    void* posIns = vec->vec+vec->ce*vec->tamElem;
+    memcpy(posIns,elem,vec->tamElem);
     vec->ce++;
 
     return TODO_OK;
@@ -90,9 +91,9 @@ bool __ampliarCapVector(Vector* vec){
     return TODO_OK;
 }
 
-bool __ampliarString(String* vec, tam){
+bool __ampliarString(String* vec,size_t tam){
 
-    void* nvec=realloc(vec->vec,tam);
+    void* nvec=realloc(vec,tam);
 
     if(!nvec)
         return SIN_MEMORIA;
@@ -110,15 +111,12 @@ size_t largoString(const void* pal){
         tam++;
         j++;
     }
-
     return tam;
 }
 
 void vectorElim(Vector* vec){
     free(vec->vec);
-    vec->cap = NULL;
-    vec->ce = NULL;
-    vec->tamElem = NULL;
+    vec->vec = NULL;
 }
 
 void stringEliminar(String* vec){
@@ -156,29 +154,36 @@ void matrizElim(void** mat,const size_t fil){
     free(mat);
 }
 
+short int tipoFuncionalidad(char* argc, int argv){
+
+return 1;
+}
+
 void solucion(int argc, char* argv[])
 {
     if(argc<=1){ // Pregunto cuantos argumentos hay
         puts("No hay Argumentos suficientes");
         return SIN_PARAMETROS;
     }
-
-    Vector funci, archBMP;
+    short int opcion;
+    Vector funci;
+    String archBMP;
     crearVector(&funci,sizeof(short int));
 
     crearString(&archBMP);
 
     for(short int i=0;i<argc;i++){
         if(argv[i][0]=='-'){
-            opcion = tipoFuncionlidad(&argc,argv);
+            opcion = tipoFuncionalidad(&argc,argv);
             if(opcion!=-1)
                 vectorInsertarFinal(&funci,&opcion);
             else
-                return FUNC_INEXI
+                return FUNC_INEXI;
         }else
-            vectorInsertarFinal(&archBMP,argv[i]);
+            insertarString(&archBMP,argv[i]);
     }
 
-
-
+    printf("%d\n%s",funci.vec,archBMP.vec);
+    stringEliminar(&archBMP);
+    vectorElim(&funci);
 }
