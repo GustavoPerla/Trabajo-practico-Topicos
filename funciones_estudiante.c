@@ -36,7 +36,7 @@ bool crearString(String* vec){
     return TODO_OK;
 }
 
-bool insertarString(String* vec,const char* pal){
+bool insertarString(String* vec,char* pal){
     size_t tam = largoString(pal);
 
     if(__ampliarString(vec->vec,tam))
@@ -44,7 +44,7 @@ bool insertarString(String* vec,const char* pal){
     char* j = vec->vec;
 
     for(size_t i=0;i<=tam;i++){
-        (*j)=pal[i];
+        *j=pal[i];
         j++;
     }
 
@@ -122,7 +122,6 @@ void vectorElim(Vector* vec){
 void stringEliminar(String* vec){
     free(vec->vec);
     vec->vec=NULL;
-    vec->ce=NULL;
 }
 
 void** matrizCrear(size_t filas, size_t columnas,size_t tamElem){
@@ -154,7 +153,7 @@ void matrizElim(void** mat,const size_t fil){
     free(mat);
 }
 
-short int tipoFuncionalidad(char* argc, int argv){
+short int tipoFuncionalidad(char* argv[], int argc){
 
 return 1;
 }
@@ -163,7 +162,7 @@ void solucion(int argc, char* argv[])
 {
     if(argc<=1){ // Pregunto cuantos argumentos hay
         puts("No hay Argumentos suficientes");
-        return SIN_PARAMETROS;
+        exit(SIN_PARAMETROS);
     }
     short int opcion;
     Vector funci;
@@ -174,16 +173,16 @@ void solucion(int argc, char* argv[])
 
     for(short int i=0;i<argc;i++){
         if(argv[i][0]=='-'){
-            opcion = tipoFuncionalidad(&argc,argv);
+            opcion = tipoFuncionalidad(argv,argc);
             if(opcion!=-1)
                 vectorInsertarFinal(&funci,&opcion);
             else
-                return FUNC_INEXI;
+                exit(FUNC_INEXI);
         }else
             insertarString(&archBMP,argv[i]);
     }
 
-    printf("%d\n%s",funci.vec,archBMP.vec);
+    printf("%d\n%s",*(short int)funci.vec,(char*)archBMP.vec);
     stringEliminar(&archBMP);
     vectorElim(&funci);
 }

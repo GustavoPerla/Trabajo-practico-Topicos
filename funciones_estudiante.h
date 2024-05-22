@@ -20,7 +20,7 @@
 //Macros de errores
 #define SIN_MEMORIA 5
 #define SIN_PARAMETROS 15
-#define FUNC_INEXI
+#define FUNC_INEXI 25
 
 
 typedef struct{
