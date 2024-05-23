@@ -24,6 +24,7 @@
 bool __ampliarCapVector(Vector*);
 bool __ampliarString(String*,size_t);
 size_t largoString(void*);
+void matrizElim(void**,const size_t);
 
 bool crearString(String* vec){
     vec->vec = malloc(sizeof(char));
@@ -71,7 +72,7 @@ bool vectorInsertarFinal(Vector* vec,const void* elem){
         if(!__ampliarCapVector(vec))
             return SIN_MEMORIA;
 
-    void* posIns = vec->vec+vec->ce*vec->tamElem;
+    void* posIns = vec->vec+vec->ce * vec->tamElem;
     memcpy(posIns,elem,vec->tamElem);
     vec->ce++;
 
@@ -158,7 +159,7 @@ short int tipoFuncionalidad(char* argv[], int argc){
 return 1;
 }
 
-void solucion(int argc, char* argv[])
+void solucion(int argc,char* argv[])
 {
     if(argc<=1){ // Pregunto cuantos argumentos hay
         puts("No hay Argumentos suficientes");
@@ -171,9 +172,9 @@ void solucion(int argc, char* argv[])
 
     crearString(&archBMP);
 
-    for(short int i=0;i<argc;i++){
+    for(short int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
-            opcion = tipoFuncionalidad(argv,argc);
+            opcion =tipoFuncionalidad(argv,argc);
             if(opcion!=-1)
                 vectorInsertarFinal(&funci,&opcion);
             else
@@ -182,7 +183,7 @@ void solucion(int argc, char* argv[])
             insertarString(&archBMP,argv[i]);
     }
 
-    printf("%d\n%s",*(short int)funci.vec,(char*)archBMP.vec);
+    printf("%d\n%s",*(short int*)funci.vec,(char*)archBMP.vec);
     stringEliminar(&archBMP);
     vectorElim(&funci);
 }
