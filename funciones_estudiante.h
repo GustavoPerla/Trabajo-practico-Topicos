@@ -35,8 +35,11 @@ typedef struct{
     size_t ce;
 }String;
 
+
+
 void solucion(int argc, char* argv[]);
 size_t largoString(void*);
+void matrizElim(void**,const size_t);
 
 
 #endif // FUNCIONES_ESTUDIANTE_H_INCLUDED

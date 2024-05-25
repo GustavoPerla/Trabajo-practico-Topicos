@@ -40,16 +40,17 @@ bool crearString(String* vec){
 bool insertarString(String* vec,char* pal){
     size_t tam = largoString(pal);
 
-    if(__ampliarString(vec->vec,tam))
+    if(__ampliarString(vec->vec,vec->ce+tam))
         return SIN_MEMORIA;
-    char* j = vec->vec;
 
-    for(size_t i=0;i<=tam;i++){
+    char* j = vec->vec + vec->ce*(sizeof(char));
+
+    for(size_t i=0;i<tam;i++){
         *j=pal[i];
         j++;
     }
 
-    vec->ce=tam;
+    vec->ce+=tam;
 
     return TODO_OK;
 }
@@ -154,10 +155,13 @@ void matrizElim(void** mat,const size_t fil){
     free(mat);
 }
 
-short int tipoFuncionalidad(char* argv[], int argc){
+//FILE* abrirArch(char* path){
 
-return 1;
-}
+    //FILE* arch;
+
+
+
+//}
 
 void solucion(int argc,char* argv[])
 {
@@ -165,25 +169,46 @@ void solucion(int argc,char* argv[])
         puts("No hay Argumentos suficientes");
         exit(SIN_PARAMETROS);
     }
-    short int opcion;
-    Vector funci;
-    String archBMP;
-    crearVector(&funci,sizeof(short int));
+    String funci[argc-1];//Funciones a realizar
+    String archBMP;//Para el Nombre del archivo
 
+    //Creo tipos TDA de Vector y String
     crearString(&archBMP);
+    for(short int i=0;i<argc-1;i++)
+        crearString(&funci[i]);
 
+    short int j=0;
+
+    //Saco funciones y nombre de los archivos
     for(short int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
-            opcion =tipoFuncionalidad(argv,argc);
-            if(opcion!=-1)
-                vectorInsertarFinal(&funci,&opcion);
-            else
-                exit(FUNC_INEXI);
+            insertarString(&(funci[j]),&argv[i][2]);
+            insertarString(&(funci[j]),".bmp");
+            j++;
         }else
             insertarString(&archBMP,argv[i]);
     }
 
-    printf("%d\n%s",*(short int*)funci.vec,(char*)archBMP.vec);
+    for(j=0;j<argc-1;j++)
+        printf("%s\n",(char*)funci[j].vec);
+
+//    FILE* BMP=fopen(archBMP.vec,"rb");
+//
+//    if(!BMP)
+//        exit(ARCHIVO_NO_ENCONTRADO);
+//
+//    char bits;
+//    fread(&bits,sizeof(char),1,BMP);
+//    while(!feof(BMP)){
+//        printf("%x",bits);
+//        fread(&bits,sizeof(char),1,BMP);
+//    }
+
+    //Cierro el archivo principal
+    //fclose(BMP);
+
+    //Elimino Tipos de Datos
     stringEliminar(&archBMP);
-    vectorElim(&funci);
+    for(j=0;j<argc-1;j++)
+        stringEliminar(&(funci[j]));
 }
