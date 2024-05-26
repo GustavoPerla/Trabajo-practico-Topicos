@@ -16,6 +16,8 @@
 //Macros utiles
 #define CAP_INI 10
 #define FACTOR_INCR 1.5
+#define RB "rb"   // Apertura de archivo
+#define WB "wb"  // Apertura de archivo
 
 //Macros de errores
 #define SIN_MEMORIA 5
@@ -33,6 +35,7 @@ typedef struct{
 typedef struct{
     void* vec;
     size_t ce;
+    size_t cap;
 }String;
 
 

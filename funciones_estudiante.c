@@ -33,25 +33,35 @@ bool crearString(String* vec){
         return SIN_MEMORIA;
 
     vec->ce=0;
-
+    vec->cap=sizeof(char);
     return TODO_OK;
 }
 
 bool insertarString(String* vec,char* pal){
     size_t tam = largoString(pal);
 
-    if(__ampliarString(vec->vec,vec->ce+tam))
+    if(__ampliarString(vec,tam+vec->ce))
         return SIN_MEMORIA;
 
-    char* j = vec->vec + vec->ce*(sizeof(char));
+    char* j = vec->vec+vec->ce;
 
-    for(size_t i=0;i<tam;i++){
-        *j=pal[i];
+    for(size_t i=0;i<=tam;i++){
+        (*j)=pal[i];
         j++;
     }
-
     vec->ce+=tam;
+    return TODO_OK;
+}
 
+bool __ampliarString(String* vec,size_t tam){
+
+    void* nvec = realloc(vec->vec,tam);
+
+    if(!nvec)
+        return SIN_MEMORIA;
+
+    vec->vec=nvec;
+    vec->cap=tam;
     return TODO_OK;
 }
 
@@ -89,19 +99,6 @@ bool __ampliarCapVector(Vector* vec){
 
     vec->vec=nvec;
     vec->cap=cap;
-
-    return TODO_OK;
-}
-
-bool __ampliarString(String* vec,size_t tam){
-
-    void* nvec=realloc(vec,tam);
-
-    if(!nvec)
-        return SIN_MEMORIA;
-
-    vec->vec=nvec;
-    vec->ce=tam;
 
     return TODO_OK;
 }
@@ -155,13 +152,21 @@ void matrizElim(void** mat,const size_t fil){
     free(mat);
 }
 
-//FILE* abrirArch(char* path){
+void crearArchivos(FILE* arch[],String* path,const size_t ce,const char* apertura){
 
-    //FILE* arch;
+    for(short int i=0;i<ce;i++){
+        arch[i] = fopen(path[i].vec,apertura);
+        if(!arch[i]){
+            for(short int j=0;j<i;j++)
+                fclose(arch[j]);
+        }
+    }
+}
 
-
-
-//}
+void cerrarArchivos(FILE* arch[],size_t ce){
+    for(short int i=0;i<ce;i++)
+        fclose(arch[i]);
+}
 
 void solucion(int argc,char* argv[])
 {
@@ -169,19 +174,20 @@ void solucion(int argc,char* argv[])
         puts("No hay Argumentos suficientes");
         exit(SIN_PARAMETROS);
     }
-    String funci[argc-1];//Funciones a realizar
+    short int cantFun=argc-2;
+    String funci[cantFun];//Funciones a realizar
     String archBMP;//Para el Nombre del archivo
 
-    //Creo tipos TDA de Vector y String
+    //Creo tipos TDA String
     crearString(&archBMP);
-    for(short int i=0;i<argc-1;i++)
-        crearString(&funci[i]);
+    for(short int i=0;i<cantFun;i++)
+        crearString(&(funci[i]));
 
     short int j=0;
-
     //Saco funciones y nombre de los archivos
     for(short int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
+            insertarString(&(funci[j]),"Estudiante_");
             insertarString(&(funci[j]),&argv[i][2]);
             insertarString(&(funci[j]),".bmp");
             j++;
@@ -189,26 +195,33 @@ void solucion(int argc,char* argv[])
             insertarString(&archBMP,argv[i]);
     }
 
-    for(j=0;j<argc-1;j++)
-        printf("%s\n",(char*)funci[j].vec);
+    //Creo archivos a utilizar
+    FILE* archivos[cantFun];
+    crearArchivos(archivos,funci,cantFun,WB);
 
-//    FILE* BMP=fopen(archBMP.vec,"rb");
-//
-//    if(!BMP)
-//        exit(ARCHIVO_NO_ENCONTRADO);
-//
-//    char bits;
-//    fread(&bits,sizeof(char),1,BMP);
-//    while(!feof(BMP)){
-//        printf("%x",bits);
-//        fread(&bits,sizeof(char),1,BMP);
-//    }
+    if(archivos[0]!=NULL){
 
-    //Cierro el archivo principal
-    //fclose(BMP);
+        FILE* BMP=fopen(archBMP.vec,RB);
 
+        if(!BMP)
+            exit(ARCHIVO_NO_ENCONTRADO);
+
+        char bits;
+
+        fread(&bits,sizeof(char),1,BMP);
+        while(!feof(BMP)){
+            printf("%x",bits);
+            fread(&bits,sizeof(char),1,BMP);
+        }
+
+        //Cierro el archivo principal
+        fclose(BMP);
+
+        cerrarArchivos(archivos,cantFun);
+    }
     //Elimino Tipos de Datos
     stringEliminar(&archBMP);
-    for(j=0;j<argc-1;j++)
+    for(j=0;j<cantFun;j++)
         stringEliminar(&(funci[j]));
+
 }
