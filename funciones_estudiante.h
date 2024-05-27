@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 
 //Headers
@@ -39,22 +40,22 @@ typedef struct{
 }String;
 
 typedef struct{
-    char nom[2];
-    unsigned int tamArch;
-    unsigned short reservado;
-    unsigned short reservado2;
-    unsigned int offset;
-    unsigned int tamCabecera;
-    unsigned int ancho;
-    unsigned int alto;
-    unsigned short numplanos;
-    unsigned short tamPuntos;
-    unsigned int compresion;
-    unsigned int tamImagen;
-    unsigned int resolucionH;
-    unsigned int resolucionV;
-    unsigned int tamTablaColor;
-    unsigned int contColImpo;
+    uint16_t nom;
+    uint32_t tamArch;
+    uint16_t reservado;
+    uint16_t reservado2;
+    uint32_t offset;
+    uint32_t tamCabecera;
+    uint32_t ancho;
+    uint32_t alto;
+    uint16_t numplanos;
+    uint16_t tamPuntos;
+    uint32_t compresion;
+    uint32_t tamImagen;
+    uint32_t resolucionH;
+    uint32_t resolucionV;
+    uint32_t tamTablaColor;
+    uint32_t contColImpo;
 }EncabezadoBMP;
 
 void solucion(int argc, char* argv[]);

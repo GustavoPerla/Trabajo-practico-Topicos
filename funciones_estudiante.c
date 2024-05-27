@@ -168,6 +168,70 @@ void cerrarArchivos(FILE* arch[],size_t ce){
         fclose(arch[i]);
 }
 
+void negativo(FILE* prin, FILE* modi){
+    uint8_t pixel[3];
+    while(!feof(prin)){
+        fread(&pixel,sizeof(pixel),1,prin);
+        pixel[0] = 255-pixel[0];
+        pixel[1] = 255-pixel[1];
+        pixel[2] = 255-pixel[2];
+        fwrite(&pixel,sizeof(pixel),1,modi);
+    }
+    fclose(modi);
+}
+
+void escala_de_grises(FILE* prin, FILE* modi){
+    uint8_t pixel[3];
+    while(!feof(prin)){
+        fread(&pixel,sizeof(pixel),1,prin);
+        uint8_t prom =(pixel[0]+pixel[1]+pixel[2])/3;
+        pixel[0] = prom;
+        pixel[1] = prom;
+        pixel[2] = prom;
+        fwrite(&pixel,sizeof(pixel),1,modi);
+    }
+    fclose(modi);
+}
+
+void tonalidad_roja(FILE* prin, FILE* modi){
+    uint8_t pixel[3];
+    while(!feof(prin)){
+        fread(&pixel,sizeof(pixel),1,prin);
+        if(pixel[0]*1.5>255)
+            pixel[0]=255;
+        else
+            pixel[0]*=1.5;
+        fwrite(&pixel,sizeof(pixel),1,modi);
+    }
+    fclose(modi);
+}
+
+void tonalidad_azul(FILE* prin, FILE* modi){
+    uint8_t pixel[3];
+    while(!feof(prin)){
+        fread(&pixel,sizeof(pixel),1,prin);
+        if(pixel[1]*1.5>255)
+            pixel[1]=255;
+        else
+            pixel[1]*=1.5;
+        fwrite(&pixel,sizeof(pixel),1,modi);
+    }
+    fclose(modi);
+}
+
+void tonalidad_verde(FILE* prin, FILE* modi){
+    uint8_t pixel[3];
+    while(!feof(prin)){
+        fread(&pixel,sizeof(pixel),1,prin);
+        if(pixel[2]*1.5>255)
+            pixel[2]=255;
+        else
+            pixel[2]*=1.5;
+        fwrite(&pixel,sizeof(pixel),1,modi);
+    }
+    fclose(modi);
+}
+
 void solucion(int argc,char* argv[])
 {
     if(argc<=1){ // Pregunto cuantos argumentos hay
@@ -198,7 +262,7 @@ void solucion(int argc,char* argv[])
     //Creo archivos a utilizar
     FILE* archivos[cantFun];
     crearArchivos(archivos,funci,cantFun,WB);
-        ////////////ARREGLAR ESTO: los archivos e tienen que crear despue de poder leer el archivo principal
+        ////////////ARREGLAR ESTO: los archivos se tienen que crear despues de poder leer el archivo principal
     if(archivos[0]!=NULL){
 
         FILE* BMP=fopen(archBMP.vec,RB);
@@ -209,20 +273,14 @@ void solucion(int argc,char* argv[])
         EncabezadoBMP bits;
         fread(&bits,sizeof(EncabezadoBMP),1,BMP);
         fwrite(&bits,sizeof(EncabezadoBMP),1,archivos[0]);
-        char pixel[3];
-        while(!feof(BMP)){
-            fread(&pixel,sizeof(pixel),1,BMP);
-            short int prom= (pixel[0]+pixel[1]+pixel[2])/3;
-            pixel[0]=prom;
-            pixel[1]=prom;
-            pixel[2]=prom;
-            fwrite(&pixel,sizeof(pixel),1,archivos[0]);
-        }
+        //negativo(BMP,archivos[0]);
+        //escala_de_grises(BMP,archivos[0]);
+        tonalidad_verde(BMP,archivos[0]);
 
         //Cierro el archivo principal
         fclose(BMP);
 
-        cerrarArchivos(archivos,cantFun);
+        //cerrarArchivos(archivos,cantFun);
     }
     //Elimino Tipos de Datos
     stringEliminar(&archBMP);
