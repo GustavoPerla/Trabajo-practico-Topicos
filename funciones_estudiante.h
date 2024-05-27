@@ -38,7 +38,24 @@ typedef struct{
     size_t cap;
 }String;
 
-
+typedef struct{
+    char nom[2];
+    unsigned int tamArch;
+    unsigned short reservado;
+    unsigned short reservado2;
+    unsigned int offset;
+    unsigned int tamCabecera;
+    unsigned int ancho;
+    unsigned int alto;
+    unsigned short numplanos;
+    unsigned short tamPuntos;
+    unsigned int compresion;
+    unsigned int tamImagen;
+    unsigned int resolucionH;
+    unsigned int resolucionV;
+    unsigned int tamTablaColor;
+    unsigned int contColImpo;
+}EncabezadoBMP;
 
 void solucion(int argc, char* argv[]);
 size_t largoString(void*);

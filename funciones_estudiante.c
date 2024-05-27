@@ -198,7 +198,7 @@ void solucion(int argc,char* argv[])
     //Creo archivos a utilizar
     FILE* archivos[cantFun];
     crearArchivos(archivos,funci,cantFun,WB);
-
+        ////////////ARREGLAR ESTO: los archivos e tienen que crear despue de poder leer el archivo principal
     if(archivos[0]!=NULL){
 
         FILE* BMP=fopen(archBMP.vec,RB);
@@ -206,12 +206,17 @@ void solucion(int argc,char* argv[])
         if(!BMP)
             exit(ARCHIVO_NO_ENCONTRADO);
 
-        char bits;
-
-        fread(&bits,sizeof(char),1,BMP);
+        EncabezadoBMP bits;
+        fread(&bits,sizeof(EncabezadoBMP),1,BMP);
+        fwrite(&bits,sizeof(EncabezadoBMP),1,archivos[0]);
+        char pixel[3];
         while(!feof(BMP)){
-            printf("%x",bits);
-            fread(&bits,sizeof(char),1,BMP);
+            fread(&pixel,sizeof(pixel),1,BMP);
+            short int prom= (pixel[0]+pixel[1]+pixel[2])/3;
+            pixel[0]=prom;
+            pixel[1]=prom;
+            pixel[2]=prom;
+            fwrite(&pixel,sizeof(pixel),1,archivos[0]);
         }
 
         //Cierro el archivo principal
