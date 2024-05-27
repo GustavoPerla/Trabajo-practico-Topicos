@@ -152,20 +152,19 @@ void matrizElim(void** mat,const size_t fil){
     free(mat);
 }
 
+void cerrarArchivos(FILE* arch[],size_t ce){
+    for(short int i=0;i<ce;i++)
+        fclose(arch[i]);
+}
+
 void crearArchivos(FILE* arch[],String* path,const size_t ce,const char* apertura){
 
     for(short int i=0;i<ce;i++){
         arch[i] = fopen(path[i].vec,apertura);
         if(!arch[i]){
-            for(short int j=0;j<i;j++)
-                fclose(arch[j]);
+            cerrarArchivos(arch,i);
         }
     }
-}
-
-void cerrarArchivos(FILE* arch[],size_t ce){
-    for(short int i=0;i<ce;i++)
-        fclose(arch[i]);
 }
 
 void negativo(FILE* prin, FILE* modi){
@@ -259,29 +258,36 @@ void solucion(int argc,char* argv[])
             insertarString(&archBMP,argv[i]);
     }
 
+    FILE* BMP=fopen(archBMP.vec,RB);
+
+    if(!BMP){
+        stringEliminar(&archBMP);
+        for(j=0;j<cantFun;j++)
+            stringEliminar(&(funci[j]));
+        exit(ARCHIVO_NO_ENCONTRADO);
+    }
+
     //Creo archivos a utilizar
     FILE* archivos[cantFun];
     crearArchivos(archivos,funci,cantFun,WB);
-        ////////////ARREGLAR ESTO: los archivos se tienen que crear despues de poder leer el archivo principal
-    if(archivos[0]!=NULL){
 
-        FILE* BMP=fopen(archBMP.vec,RB);
-
-        if(!BMP)
-            exit(ARCHIVO_NO_ENCONTRADO);
-
-        EncabezadoBMP bits;
-        fread(&bits,sizeof(EncabezadoBMP),1,BMP);
-        fwrite(&bits,sizeof(EncabezadoBMP),1,archivos[0]);
-        //negativo(BMP,archivos[0]);
-        //escala_de_grises(BMP,archivos[0]);
-        tonalidad_verde(BMP,archivos[0]);
-
-        //Cierro el archivo principal
+    if(archivos[0]==NULL){
         fclose(BMP);
-
-        //cerrarArchivos(archivos,cantFun);
+        stringEliminar(&archBMP);
+        for(j=0;j<cantFun;j++)
+            stringEliminar(&(funci[j]));
+        exit(ERROR_AL_ABRIR_ARCHIVOS);
     }
+
+    EncabezadoBMP bits;
+    fread(&bits,sizeof(EncabezadoBMP),1,BMP);
+    fwrite(&bits,sizeof(EncabezadoBMP),1,archivos[0]);
+    //negativo(BMP,archivos[0]);
+    //escala_de_grises(BMP,archivos[0]);
+    //tonalidad_verde(BMP,archivos[0]);
+
+    //Cierro el archivo principal
+    fclose(BMP);
     //Elimino Tipos de Datos
     stringEliminar(&archBMP);
     for(j=0;j<cantFun;j++)

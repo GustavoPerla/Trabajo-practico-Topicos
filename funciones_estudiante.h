@@ -24,6 +24,7 @@
 #define SIN_MEMORIA 5
 #define SIN_PARAMETROS 15
 #define FUNC_INEXI 25
+#define ERROR_AL_ABRIR_ARCHIVOS 30
 
 
 typedef struct{
