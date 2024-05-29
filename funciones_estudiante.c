@@ -184,14 +184,15 @@ t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,siz
 
     for(size_t i=0;i<*tam;i++)// Copio el encabezado en todos los archivos creados
         fwrite(&bits,sizeof(EncabezadoBMP),1,arch[i]);
-    printf("%s\n",path);
+
+
     meta_bmp->alto=bits.alto;
     meta_bmp->ancho=bits.ancho;
     meta_bmp->profundidad=bits.tamPuntos;
     meta_bmp->tamArchivo=bits.tamArch;
     meta_bmp->tamEncabezado=bits.tamCabecera;
 
-    t_pixel*** mat = (t_pixel**)matrizCrear(meta_bmp->alto,meta_bmp->ancho,sizeof(t_pixel));
+    t_pixel** mat = (t_pixel**)matrizCrear(meta_bmp->alto,meta_bmp->ancho,sizeof(t_pixel));
 
     if(!mat){
         fclose(BMP);
@@ -199,21 +200,20 @@ t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,siz
         return NULL;
     }
 
-    t_pixel pixel;
-    pixel.profundidad=meta_bmp->profundidad;
-
-    fread(&pixel,sizeof(char)*3,1,BMP);
+    size_t padding = (4 - (meta_bmp->ancho * 3) % 4) % 4;// El padding se calcula para que cada fila sea un múltiplo de 4 bytes de longitud
     size_t i=0;
     while(!feof(BMP) && i<meta_bmp->alto){
         for(size_t j=0;j<meta_bmp->ancho;j++){
-            *mat[i][j] = pixel;
+            if(fread(&mat[i][j],sizeof(char),3,BMP)!=3);
+                return NULL;
+                mat[i][j].profundidad=meta_bmp->profundidad;
         }
-
-        fread(&pixel,sizeof(char)*3,1,BMP);
+        fseek(BMP,padding,SEEK_CUR);
         i++;
     }
-    fclose(BMP);
 
+    fclose(BMP);
+    printf("%s\n",path);
     return mat;
 }
 
