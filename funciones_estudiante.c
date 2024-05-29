@@ -157,15 +157,66 @@ void cerrarArchivos(FILE* arch[],size_t ce){
         fclose(arch[i]);
 }
 
-void crearArchivos(FILE* arch[],String* path,const size_t ce,const char* apertura){
-
+bool crearArchivos(FILE* arch[],String* path,const size_t ce,const char* apertura){
     for(short int i=0;i<ce;i++){
         arch[i] = fopen(path[i].vec,apertura);
         if(!arch[i]){
             cerrarArchivos(arch,i);
+            return ERROR_AL_ABRIR_ARCHIVOS;
         }
     }
+    return TODO_OK;
 }
+
+t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,size_t *tam){
+
+    FILE* BMP=fopen(path,RB);
+    if(!BMP)
+        return NULL;
+
+    if(crearArchivos(arch,funci,*tam,WB)){
+        fclose(BMP);
+        return NULL;
+    }
+
+    EncabezadoBMP bits;
+    fread(&bits,sizeof(EncabezadoBMP),1,BMP);
+
+    for(size_t i=0;i<*tam;i++)// Copio el encabezado en todos los archivos creados
+        fwrite(&bits,sizeof(EncabezadoBMP),1,arch[i]);
+    printf("%s\n",path);
+    meta_bmp->alto=bits.alto;
+    meta_bmp->ancho=bits.ancho;
+    meta_bmp->profundidad=bits.tamPuntos;
+    meta_bmp->tamArchivo=bits.tamArch;
+    meta_bmp->tamEncabezado=bits.tamCabecera;
+
+    t_pixel*** mat = (t_pixel**)matrizCrear(meta_bmp->alto,meta_bmp->ancho,sizeof(t_pixel));
+
+    if(!mat){
+        fclose(BMP);
+        cerrarArchivos(arch,*tam);
+        return NULL;
+    }
+
+    t_pixel pixel;
+    pixel.profundidad=meta_bmp->profundidad;
+
+    fread(&pixel,sizeof(char)*3,1,BMP);
+    size_t i=0;
+    while(!feof(BMP) && i<meta_bmp->alto){
+        for(size_t j=0;j<meta_bmp->ancho;j++){
+            *mat[i][j] = pixel;
+        }
+
+        fread(&pixel,sizeof(char)*3,1,BMP);
+        i++;
+    }
+    fclose(BMP);
+
+    return mat;
+}
+
 
 void negativo(FILE* prin, FILE* modi){
     uint8_t pixel[3];
@@ -192,43 +243,26 @@ void escala_de_grises(FILE* prin, FILE* modi){
     fclose(modi);
 }
 
-void tonalidad_roja(FILE* prin, FILE* modi){
-    uint8_t pixel[3];
-    while(!feof(prin)){
-        fread(&pixel,sizeof(pixel),1,prin);
-        if(pixel[0]*1.5>255)
-            pixel[0]=255;
-        else
-            pixel[0]*=1.5;
-        fwrite(&pixel,sizeof(pixel),1,modi);
+void tonalidad(t_pixel** mat, FILE* modi,short tono,t_metadata* meta){
+    for(size_t i=0;i<meta->alto;i++){
+        for(size_t j=0;j<meta->ancho;j++){
+            uint8_t pixel[] = {mat[i][j].pixel[0],mat[i][j].pixel[1],mat[i][j].pixel[2]};
+            if(pixel[tono]*1.5>255)
+                pixel[tono]=255;
+            else
+                pixel[tono]*=1.5;
+            fwrite(&pixel,sizeof(pixel),1,modi);
+        }
     }
     fclose(modi);
 }
 
-void tonalidad_azul(FILE* prin, FILE* modi){
-    uint8_t pixel[3];
-    while(!feof(prin)){
-        fread(&pixel,sizeof(pixel),1,prin);
-        if(pixel[1]*1.5>255)
-            pixel[1]=255;
-        else
-            pixel[1]*=1.5;
-        fwrite(&pixel,sizeof(pixel),1,modi);
-    }
-    fclose(modi);
+void rotar_derecha(FILE* prin, FILE* modi){
+
 }
 
-void tonalidad_verde(FILE* prin, FILE* modi){
-    uint8_t pixel[3];
-    while(!feof(prin)){
-        fread(&pixel,sizeof(pixel),1,prin);
-        if(pixel[2]*1.5>255)
-            pixel[2]=255;
-        else
-            pixel[2]*=1.5;
-        fwrite(&pixel,sizeof(pixel),1,modi);
-    }
-    fclose(modi);
+void rotar_izquierda(FILE* prin, FILE* modi){
+
 }
 
 void solucion(int argc,char* argv[])
@@ -237,7 +271,7 @@ void solucion(int argc,char* argv[])
         puts("No hay Argumentos suficientes");
         exit(SIN_PARAMETROS);
     }
-    short int cantFun=argc-2;
+    size_t cantFun=argc-2;
     String funci[cantFun];//Funciones a realizar
     String archBMP;//Para el Nombre del archivo
 
@@ -258,36 +292,18 @@ void solucion(int argc,char* argv[])
             insertarString(&archBMP,argv[i]);
     }
 
-    FILE* BMP=fopen(archBMP.vec,RB);
+    t_metadata meta_bmp;
 
-    if(!BMP){
-        stringEliminar(&archBMP);
-        for(j=0;j<cantFun;j++)
-            stringEliminar(&(funci[j]));
-        exit(ARCHIVO_NO_ENCONTRADO);
-    }
-
-    //Creo archivos a utilizar
     FILE* archivos[cantFun];
-    crearArchivos(archivos,funci,cantFun,WB);
 
-    if(archivos[0]==NULL){
-        fclose(BMP);
-        stringEliminar(&archBMP);
-        for(j=0;j<cantFun;j++)
-            stringEliminar(&(funci[j]));
-        exit(ERROR_AL_ABRIR_ARCHIVOS);
+    t_pixel** mat = leerBMP(&meta_bmp,archivos,funci,archBMP.vec,&cantFun);
+
+    if(mat){
+        //negativo(mat,archivos[0],&meta_bmp);
+        //escala_de_grises(mat,archivos[0]);
+        tonalidad(mat,archivos[0],VERDE,&meta_bmp);
     }
 
-    EncabezadoBMP bits;
-    fread(&bits,sizeof(EncabezadoBMP),1,BMP);
-    fwrite(&bits,sizeof(EncabezadoBMP),1,archivos[0]);
-    //negativo(BMP,archivos[0]);
-    //escala_de_grises(BMP,archivos[0]);
-    //tonalidad_verde(BMP,archivos[0]);
-
-    //Cierro el archivo principal
-    fclose(BMP);
     //Elimino Tipos de Datos
     stringEliminar(&archBMP);
     for(j=0;j<cantFun;j++)
