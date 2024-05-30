@@ -204,9 +204,8 @@ t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,siz
     size_t i=0;
     while(!feof(BMP) && i<meta_bmp->alto){
         for(size_t j=0;j<meta_bmp->ancho;j++){
-            if(fread(&mat[i][j],sizeof(char),3,BMP)!=3);
-                return NULL;
-                mat[i][j].profundidad=meta_bmp->profundidad;
+            fread(&mat[i][j],sizeof(char),3,BMP);
+            mat[i][j].profundidad=meta_bmp->profundidad;
         }
         fseek(BMP,padding,SEEK_CUR);
         i++;
@@ -243,16 +242,12 @@ void escala_de_grises(FILE* prin, FILE* modi){
     fclose(modi);
 }
 
-void tonalidad(t_pixel** mat, FILE* modi,short tono,t_metadata* meta){
-    for(size_t i=0;i<meta->alto;i++){
-        for(size_t j=0;j<meta->ancho;j++){
-            uint8_t pixel[] = {mat[i][j].pixel[0],mat[i][j].pixel[1],mat[i][j].pixel[2]};
-            if(pixel[tono]*1.5>255)
-                pixel[tono]=255;
-            else
-                pixel[tono]*=1.5;
-            fwrite(&pixel,sizeof(pixel),1,modi);
-        }
+void tonalidad(t_pixel** mat, FILE* modi,short tono){
+    uint8_t pixel[3];
+    while(!feof(prin)){
+        fread(&pixel,sizeof(pixel),1,prin);
+        pixel[tono]*=1.5;
+        fwrite(&pixel,sizeof(pixel),1,modi);
     }
     fclose(modi);
 }
@@ -301,7 +296,7 @@ void solucion(int argc,char* argv[])
     if(mat){
         //negativo(mat,archivos[0],&meta_bmp);
         //escala_de_grises(mat,archivos[0]);
-        tonalidad(mat,archivos[0],VERDE,&meta_bmp);
+        tonalidad(mat,archivos[0],VERDE);
     }
 
     //Elimino Tipos de Datos
