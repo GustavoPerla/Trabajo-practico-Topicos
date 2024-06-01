@@ -47,8 +47,7 @@ typedef struct{
 typedef struct{
     uint16_t nom;
     uint32_t tamArch;
-    uint16_t reservado;
-    uint16_t reservado2;
+    uint32_t reservado;
     uint32_t offset;
     uint32_t tamCabecera;
     uint32_t ancho;

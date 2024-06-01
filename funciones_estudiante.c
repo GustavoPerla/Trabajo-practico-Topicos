@@ -25,6 +25,10 @@ bool __ampliarCapVector(Vector*);
 bool __ampliarString(String*,size_t);
 size_t largoString(void*);
 void matrizElim(void**,const size_t);
+void tonalidad(t_pixel,FILE*,short);
+void negativo(t_pixel,FILE*);
+void escala_de_grises(t_pixel,FILE*);
+
 
 bool crearString(String* vec){
     vec->vec = malloc(sizeof(char));
@@ -134,7 +138,7 @@ void** matrizCrear(size_t filas, size_t columnas,size_t tamElem){
     for(void** i=matriz;i<=ult;i++){
         *i= malloc(columnas*tamElem);// Creo los vectores de columnas
 
-        if(!i){// Prueba que no falle el malloc de las columnas, en tal caso borra todo lo creado hasta el momento
+        if(!*i){// Prueba que no falle el malloc de las columnas, en tal caso borra todo lo creado hasta el momento
             matrizElim(matriz,i-matriz);
             return NULL;
         }
@@ -168,6 +172,62 @@ bool crearArchivos(FILE* arch[],String* path,const size_t ce,const char* apertur
     return TODO_OK;
 }
 
+void copiarEncabezado(FILE* arch[],size_t* tam,EncabezadoBMP bits){
+    for(size_t i=0;i<*tam;i++){// Copio el encabezado en todos los archivos creados
+        fseek(arch[i],0,SEEK_SET);
+        fwrite(&bits.nom,2,1,arch[i]);
+        fwrite(&bits.tamArch,sizeof(int),1,arch[i]);
+        fwrite(&bits.reservado,sizeof(int),1,arch[i]);
+        fwrite(&bits.offset,sizeof(int),1,arch[i]);
+        fwrite(&bits.tamCabecera,sizeof(int),1,arch[i]);
+        fwrite(&bits.ancho,sizeof(int),1,arch[i]);
+        fwrite(&bits.alto,sizeof(int),1,arch[i]);
+        fwrite(&bits.numplanos,sizeof(short),1,arch[i]);
+        fwrite(&bits.tamPuntos,sizeof(short),1,arch[i]);
+        fwrite(&bits.compresion,sizeof(int),1,arch[i]);
+        fwrite(&bits.tamImagen,sizeof(int),1,arch[i]);
+        fwrite(&bits.resolucionH,sizeof(int),1,arch[i]);
+        fwrite(&bits.resolucionV,sizeof(int),1,arch[i]);
+        fwrite(&bits.tamTablaColor,sizeof(int),1,arch[i]);
+        fwrite(&bits.contColImpo,sizeof(int),1,arch[i]);
+    }
+}
+
+
+t_metadata leerEcabezado(FILE* BMP,FILE* arch[],size_t* tam){
+    EncabezadoBMP bits;
+    t_metadata meta;
+    fseek(BMP,0,SEEK_SET);
+
+    fread(&bits.nom,2,1,BMP);
+    fread(&bits.tamArch,sizeof(int),1,BMP);
+    fread(&bits.reservado,sizeof(int),1,BMP);
+    fread(&bits.offset,sizeof(int),1,BMP);
+    fread(&bits.tamCabecera,sizeof(int),1,BMP);
+    fread(&bits.ancho,sizeof(int),1,BMP);
+    fread(&bits.alto,sizeof(int),1,BMP);
+    fread(&bits.numplanos,sizeof(short),1,BMP);
+    fread(&bits.tamPuntos,sizeof(short),1,BMP);
+    fread(&bits.compresion,sizeof(int),1,BMP);
+    fread(&bits.tamImagen,sizeof(int),1,BMP);
+    fread(&bits.resolucionH,sizeof(int),1,BMP);
+    fread(&bits.resolucionV,sizeof(int),1,BMP);
+    fread(&bits.tamTablaColor,sizeof(int),1,BMP);
+    fread(&bits.contColImpo,sizeof(int),1,BMP);
+
+    //Saco datos importantes
+    meta.alto=bits.alto;
+    meta.ancho=bits.ancho;
+    meta.profundidad=bits.tamPuntos;
+    meta.tamArchivo=bits.tamArch;
+    meta.tamEncabezado=bits.tamCabecera;
+
+    copiarEncabezado(arch,tam,bits);
+
+    return meta;
+}
+
+
 t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,size_t *tam){
 
     FILE* BMP=fopen(path,RB);
@@ -179,18 +239,7 @@ t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,siz
         return NULL;
     }
 
-    EncabezadoBMP bits;
-    fread(&bits,sizeof(EncabezadoBMP),1,BMP);
-
-    for(size_t i=0;i<*tam;i++)// Copio el encabezado en todos los archivos creados
-        fwrite(&bits,sizeof(EncabezadoBMP),1,arch[i]);
-
-
-    meta_bmp->alto=bits.alto;
-    meta_bmp->ancho=bits.ancho;
-    meta_bmp->profundidad=bits.tamPuntos;
-    meta_bmp->tamArchivo=bits.tamArch;
-    meta_bmp->tamEncabezado=bits.tamCabecera;
+    *meta_bmp = leerEcabezado(BMP,arch,tam);
 
     t_pixel** mat = (t_pixel**)matrizCrear(meta_bmp->alto,meta_bmp->ancho,sizeof(t_pixel));
 
@@ -202,54 +251,46 @@ t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,siz
 
     size_t padding = (4 - (meta_bmp->ancho * 3) % 4) % 4;// El padding se calcula para que cada fila sea un múltiplo de 4 bytes de longitud
     size_t i=0;
-    while(!feof(BMP) && i<meta_bmp->alto){
+
+    while(i<meta_bmp->alto){
         for(size_t j=0;j<meta_bmp->ancho;j++){
             fread(&mat[i][j],sizeof(char),3,BMP);
             mat[i][j].profundidad=meta_bmp->profundidad;
+            //tonalidad(mat[i][j],arch[0],VERDE);
+            negativo(mat[i][j],arch[0]);
+            escala_de_grises(mat[i][j],arch[1]);
         }
         fseek(BMP,padding,SEEK_CUR);
         i++;
     }
 
+    cerrarArchivos(arch,*tam);
     fclose(BMP);
-    printf("%s\n",path);
     return mat;
 }
 
 
-void negativo(FILE* prin, FILE* modi){
-    uint8_t pixel[3];
-    while(!feof(prin)){
-        fread(&pixel,sizeof(pixel),1,prin);
-        pixel[0] = 255-pixel[0];
-        pixel[1] = 255-pixel[1];
-        pixel[2] = 255-pixel[2];
-        fwrite(&pixel,sizeof(pixel),1,modi);
-    }
-    fclose(modi);
+void negativo(t_pixel pix,FILE* arch){
+    pix.pixel[0] = 255-pix.pixel[0];
+    pix.pixel[1] = 255-pix.pixel[1];
+    pix.pixel[2] = 255-pix.pixel[2];
+    fwrite(&pix,3,1,arch);
 }
 
-void escala_de_grises(FILE* prin, FILE* modi){
-    uint8_t pixel[3];
-    while(!feof(prin)){
-        fread(&pixel,sizeof(pixel),1,prin);
-        uint8_t prom =(pixel[0]+pixel[1]+pixel[2])/3;
-        pixel[0] = prom;
-        pixel[1] = prom;
-        pixel[2] = prom;
-        fwrite(&pixel,sizeof(pixel),1,modi);
-    }
-    fclose(modi);
+void escala_de_grises(t_pixel pix,FILE* arch){
+    uint8_t prom =(pix.pixel[0]+pix.pixel[1]+pix.pixel[2])/3;
+    pix.pixel[0] = prom;
+    pix.pixel[1] = prom;
+    pix.pixel[2] = prom;
+    fwrite(&pix,3,1,arch);
 }
 
-void tonalidad(t_pixel** mat, FILE* modi,short tono){
-    uint8_t pixel[3];
-    while(!feof(prin)){
-        fread(&pixel,sizeof(pixel),1,prin);
-        pixel[tono]*=1.5;
-        fwrite(&pixel,sizeof(pixel),1,modi);
-    }
-    fclose(modi);
+void tonalidad(t_pixel pix,FILE* arch,short tono){
+    if(pix.pixel[tono]*1.5>255)
+        pix.pixel[tono]=255;
+    else
+        pix.pixel[tono]*=1.5;
+    fwrite(&pix,3,1,arch);
 }
 
 void rotar_derecha(FILE* prin, FILE* modi){
@@ -296,7 +337,7 @@ void solucion(int argc,char* argv[])
     if(mat){
         //negativo(mat,archivos[0],&meta_bmp);
         //escala_de_grises(mat,archivos[0]);
-        tonalidad(mat,archivos[0],VERDE);
+        matrizElim((void**)mat,meta_bmp.alto);
     }
 
     //Elimino Tipos de Datos
