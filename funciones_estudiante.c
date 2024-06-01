@@ -28,6 +28,7 @@ void matrizElim(void**,const size_t);
 void tonalidad(t_pixel,FILE*,short);
 void negativo(t_pixel,FILE*);
 void escala_de_grises(t_pixel,FILE*);
+void rotar_derecha(FILE*, t_pixel**, uint32_t, uint32_t);
 
 
 bool crearString(String* vec){
@@ -193,7 +194,6 @@ void copiarEncabezado(FILE* arch[],size_t* tam,EncabezadoBMP bits){
     }
 }
 
-
 t_metadata leerEcabezado(FILE* BMP,FILE* arch[],size_t* tam){
     EncabezadoBMP bits;
     t_metadata meta;
@@ -251,19 +251,19 @@ t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,siz
 
     size_t padding = (4 - (meta_bmp->ancho * 3) % 4) % 4;// El padding se calcula para que cada fila sea un múltiplo de 4 bytes de longitud
     size_t i=0;
-
+    fseek(BMP,54,SEEK_SET);
     while(i<meta_bmp->alto){
         for(size_t j=0;j<meta_bmp->ancho;j++){
-            fread(&mat[i][j],sizeof(char),3,BMP);
+            fread(&mat[i][j],3,1,BMP);
             mat[i][j].profundidad=meta_bmp->profundidad;
             //tonalidad(mat[i][j],arch[0],VERDE);
-            negativo(mat[i][j],arch[0]);
+            //negativo(mat[i][j],arch[0]);
             escala_de_grises(mat[i][j],arch[1]);
         }
         fseek(BMP,padding,SEEK_CUR);
         i++;
     }
-
+    rotar_derecha(arch[0],mat,meta_bmp->alto,meta_bmp->ancho);
     cerrarArchivos(arch,*tam);
     fclose(BMP);
     return mat;
@@ -293,8 +293,17 @@ void tonalidad(t_pixel pix,FILE* arch,short tono){
     fwrite(&pix,3,1,arch);
 }
 
-void rotar_derecha(FILE* prin, FILE* modi){
+void rotar_derecha(FILE* arch, t_pixel** mat,uint32_t fila,uint32_t col){
+    fseek(arch,18,SEEK_SET);
+    fwrite(&fila,sizeof(int),1,arch);
+    fwrite(&col,sizeof(int),1,arch);
+    fseek(arch,54,SEEK_SET);
 
+    fila--;
+    col--;
+    for(size_t i=col;i<0;i--)
+        for(size_t j=fila;j>0;j--)
+            fwrite(mat[j][i].pixel,3,1,arch);
 }
 
 void rotar_izquierda(FILE* prin, FILE* modi){
