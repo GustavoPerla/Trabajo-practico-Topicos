@@ -299,11 +299,9 @@ void rotar_derecha(FILE* arch, t_pixel** mat,uint32_t fila,uint32_t col){
     fwrite(&col,sizeof(int),1,arch);
     fseek(arch,54,SEEK_SET);
 
-    fila--;
-    col--;
-    for(size_t i=col;i<0;i--)
-        for(size_t j=fila;j>0;j--)
-            fwrite(mat[j][i].pixel,3,1,arch);
+    for(size_t i=0;i<col;i++)
+        for(size_t j=0;j<fila;j++)
+            fwrite(&mat[j][i].pixel,3,1,arch);
 }
 
 void rotar_izquierda(FILE* prin, FILE* modi){
