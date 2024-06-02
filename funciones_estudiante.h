@@ -19,9 +19,11 @@
 #define FACTOR_INCR 1.5
 #define RB "rb"   // Apertura de archivo
 #define WB "wb"  // Apertura de archivo
-#define ROJO 0
-#define AZUL 1
-#define VERDE 2
+#define AZUL 0
+#define VERDE 1
+#define ROJO 2
+
+
 
 
 //Macros de errores

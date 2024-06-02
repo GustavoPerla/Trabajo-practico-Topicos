@@ -25,11 +25,11 @@ bool __ampliarCapVector(Vector*);
 bool __ampliarString(String*,size_t);
 size_t largoString(void*);
 void matrizElim(void**,const size_t);
-void tonalidad(t_pixel,FILE*,short);
-void negativo(t_pixel,FILE*);
-void escala_de_grises(t_pixel,FILE*);
+void tonalidad(const unsigned char[],FILE*,short);
+void negativo(const unsigned char [],FILE*);
+void escala_de_grises(const unsigned char[],FILE*);
 void rotar_derecha(FILE*, t_pixel**, uint32_t, uint32_t);
-
+void recortar(FILE*, t_pixel** ,uint32_t ,uint32_t );
 
 bool crearString(String* vec){
     vec->vec = malloc(sizeof(char));
@@ -45,7 +45,7 @@ bool crearString(String* vec){
 bool insertarString(String* vec,char* pal){
     size_t tam = largoString(pal);
 
-    if(__ampliarString(vec,tam+vec->ce))
+    if(__ampliarString(vec,tam+vec->cap))
         return SIN_MEMORIA;
 
     char* j = vec->vec+vec->ce;
@@ -199,7 +199,7 @@ t_metadata leerEcabezado(FILE* BMP,FILE* arch[],size_t* tam){
     t_metadata meta;
     fseek(BMP,0,SEEK_SET);
 
-    fread(&bits.nom,2,1,BMP);
+    fread(&bits.nom,sizeof(bits.nom),1,BMP);
     fread(&bits.tamArch,sizeof(int),1,BMP);
     fread(&bits.reservado,sizeof(int),1,BMP);
     fread(&bits.offset,sizeof(int),1,BMP);
@@ -253,44 +253,59 @@ t_pixel** leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,siz
     size_t i=0;
     fseek(BMP,54,SEEK_SET);
     while(i<meta_bmp->alto){
-        for(size_t j=0;j<meta_bmp->ancho;j++){
+        for(size_t j=0;j<=meta_bmp->ancho;j++){
             fread(&mat[i][j],3,1,BMP);
             mat[i][j].profundidad=meta_bmp->profundidad;
-            //tonalidad(mat[i][j],arch[0],VERDE);
-            //negativo(mat[i][j],arch[0]);
-            escala_de_grises(mat[i][j],arch[1]);
+            tonalidad(mat[i][j].pixel,arch[0],ROJO);
+            negativo(mat[i][j].pixel,arch[1]);
+            escala_de_grises(mat[i][j].pixel,arch[2]);
         }
         fseek(BMP,padding,SEEK_CUR);
         i++;
     }
-    rotar_derecha(arch[0],mat,meta_bmp->alto,meta_bmp->ancho);
+    rotar_derecha(arch[3],mat,meta_bmp->alto,meta_bmp->ancho);
     cerrarArchivos(arch,*tam);
     fclose(BMP);
     return mat;
 }
 
 
-void negativo(t_pixel pix,FILE* arch){
-    pix.pixel[0] = 255-pix.pixel[0];
-    pix.pixel[1] = 255-pix.pixel[1];
-    pix.pixel[2] = 255-pix.pixel[2];
-    fwrite(&pix,3,1,arch);
+void negativo(const unsigned char pixel[],FILE* arch){
+    unsigned char pix[3];
+    pix[0] = pixel[0];
+    pix[1] = pixel[1];
+    pix[2] = pixel[2];
+
+    pix[0] = 255-pix[0];
+    pix[1] = 255-pix[1];
+    pix[2] = 255-pix[2];
+    fwrite(pix,3,1,arch);
 }
 
-void escala_de_grises(t_pixel pix,FILE* arch){
-    uint8_t prom =(pix.pixel[0]+pix.pixel[1]+pix.pixel[2])/3;
-    pix.pixel[0] = prom;
-    pix.pixel[1] = prom;
-    pix.pixel[2] = prom;
-    fwrite(&pix,3,1,arch);
+void escala_de_grises(const unsigned char pixel[],FILE* arch){
+    unsigned char pix[3];
+    pix[0] = pixel[0];
+    pix[1] = pixel[1];
+    pix[2] = pixel[2];
+
+    uint8_t prom =(pix[0]+pix[1]+pix[2])/3;
+    pix[0] = prom;
+    pix[1] = prom;
+    pix[2] = prom;
+    fwrite(pix,3,1,arch);
 }
 
-void tonalidad(t_pixel pix,FILE* arch,short tono){
-    if(pix.pixel[tono]*1.5>255)
-        pix.pixel[tono]=255;
+void tonalidad(const unsigned char pixel[],FILE* arch,short tono){
+    unsigned char pix[3];
+    pix[0] = pixel[0];
+    pix[1] = pixel[1];
+    pix[2] = pixel[2];
+
+    if(pix[tono]*1.5>255)
+        pix[tono]=255;
     else
-        pix.pixel[tono]*=1.5;
-    fwrite(&pix,3,1,arch);
+        pix[tono]*=1.5;
+    fwrite(pix,3,1,arch);
 }
 
 void rotar_derecha(FILE* arch, t_pixel** mat,uint32_t fila,uint32_t col){
@@ -299,14 +314,54 @@ void rotar_derecha(FILE* arch, t_pixel** mat,uint32_t fila,uint32_t col){
     fwrite(&col,sizeof(int),1,arch);
     fseek(arch,54,SEEK_SET);
 
-    for(size_t i=col-1;i>=0;i--)
+    t_pixel** aux= (t_pixel**) matrizCrear(col,fila,sizeof(t_pixel));
+
+    for(size_t i=0;i<col;i++)
         for(size_t j=0;j<fila;j++)
-            fwrite(&mat[j][i].pixel,3,1,arch);
+            aux[i][j]=mat[fila-1-j][i];
+
+    for(size_t i=0;i<col;i++)
+        for(size_t j=0;j<fila;j++)
+            fwrite(&aux[i][j],3,1,arch);
+
+    matrizElim((void**)aux,col);
+
 }
 
 void rotar_izquierda(FILE* prin, FILE* modi){
 
 }
+
+void recortar(FILE* arch, t_pixel** mat,uint32_t fila,uint32_t col)
+{
+    t_pixel pixelVacio;
+    pixelVacio.pixel[0] = 0;
+    pixelVacio.pixel[1] = 0;
+    pixelVacio.pixel[2] = 0;  //{ 255, 255, 255}
+    /*
+        //Si lo de arriba no anda
+        pixelVacio.pixel[0] = 0;
+        pixelVacio.pixel[1] = 0;
+        pixelVacio.pixel[2] = 0; // o si no 255
+    */
+    fseek(arch,54,SEEK_SET);
+
+    for(size_t i=0 ; i < fila/2 ;i++)
+        for(size_t j=0;j<col;j++)
+        {
+            if(j >= col/2)
+                fwrite(&pixelVacio.pixel,3,1,arch); //Aca veo si ya estoy en la mitad asi empiezo a guardar vacio
+            else
+                fwrite(&mat[i][j].pixel,3,1,arch);
+        }
+
+    for(size_t i = fila/2; i < fila; i++)
+    {
+        for(size_t j = col/2; j < col; j++)
+            fwrite(&pixelVacio.pixel,3,1,arch);
+    }
+}
+
 
 void solucion(int argc,char* argv[])
 {
@@ -342,14 +397,13 @@ void solucion(int argc,char* argv[])
     t_pixel** mat = leerBMP(&meta_bmp,archivos,funci,archBMP.vec,&cantFun);
 
     if(mat){
-        //negativo(mat,archivos[0],&meta_bmp);
-        //escala_de_grises(mat,archivos[0]);
+
         matrizElim((void**)mat,meta_bmp.alto);
     }
 
     //Elimino Tipos de Datos
     stringEliminar(&archBMP);
     for(j=0;j<cantFun;j++)
-        stringEliminar(&(funci[j]));
+        stringEliminar(&funci[j]);
 
 }
