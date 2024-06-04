@@ -229,7 +229,7 @@ t_metadata leerEcabezado(FILE* BMP,FILE* archMat[],FILE* archCol[],size_t* cantC
     return meta;
 }
 
-int compararString(const char* vec,const char* pal){
+int compararString(const char* vec,const char* pal){//Devuelve 0 si son iguales, negativo si vec es men, positivo si es mayor
     while(*vec && (*vec==*pal)){
         vec++;
         pal++;
@@ -237,7 +237,7 @@ int compararString(const char* vec,const char* pal){
     return (*vec-*pal);
 }
 
-void funciones(const unsigned char* rgb,FILE* arch[],String* col){
+void funciones(const unsigned char* rgb,FILE* arch[],String* col){//Funciones de cambio de colores ///// OJO ESTA ORDENADO DE MENOR A MAYOR
     size_t i=0;
     if(arch[i]!=NULL && !compararString(col[i].vec+11,"aumentar-contraste.bmp")){
         //aumentar_contraste(rgb,arch[i])
@@ -268,7 +268,7 @@ void funciones(const unsigned char* rgb,FILE* arch[],String* col){
     }
 }
 
-void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat){
+void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat){///// OJO ESTA ORDENADO DE MENOR A MAYOR
     size_t i=0;
 
     if(archMat[i]!=NULL && !compararString(funMat[i].vec+11,"recortar.bmp")){
