@@ -195,7 +195,7 @@ void copiarEncabezado(FILE* arch[],size_t* tam,EncabezadoBMP bits){
     }
 }
 
-t_metadata leerEcabezado(FILE* BMP,FILE* arch[],size_t* tam){
+t_metadata leerEcabezado(FILE* BMP,FILE* archMat[],FILE* archCol[],size_t* cantCol,size_t* cantMat){
     EncabezadoBMP bits;
     t_metadata meta;
     fseek(BMP,0,SEEK_SET);
@@ -223,56 +223,127 @@ t_metadata leerEcabezado(FILE* BMP,FILE* arch[],size_t* tam){
     meta.tamArchivo=bits.tamArch;
     meta.tamEncabezado=bits.tamCabecera;
 
-    copiarEncabezado(arch,tam,bits);
+    copiarEncabezado(archMat,cantMat,bits);
+    copiarEncabezado(archCol,cantCol,bits);
 
     return meta;
 }
 
-void leerBMP(t_metadata* meta_bmp,FILE* arch[],String* funci,char* path,size_t *tam){
+int compararString(const char* vec,const char* pal){
+    while(*vec && (*vec==*pal)){
+        vec++;
+        pal++;
+    }
+    return (*vec-*pal);
+}
+
+void funciones(const unsigned char* rgb,FILE* arch[],String* col){
+    size_t i=0;
+    if(arch[i]!=NULL && !compararString(col[i].vec+11,"aumentar-contraste.bmp")){
+        //aumentar_contraste(rgb,arch[i])
+        i++;
+    }
+    if(arch[i]!=NULL && !compararString(col[i].vec+11,"escala-de-grises.bmp")){
+        escala_de_grises(rgb,arch[i]);
+        i++;
+    }
+    if(arch[i]!=NULL && !compararString(col[i].vec+11,"negativo.bmp")){
+        negativo(rgb,arch[i]);
+        i++;
+    }
+    if(arch[i]!=NULL && !compararString(col[i].vec+11,"reducir-contraste.bmp")){
+        //reducir_contraste(rgb,arch[i])
+        i++;
+    }
+    if(arch[i]!=NULL && !compararString(col[i].vec+11,"tonalidad-azul.bmp")){
+        tonalidad(rgb,arch[i],AZUL);
+        i++;
+    }
+    if(arch[i]!=NULL && !compararString(col[i].vec+11,"tonalidad-roja.bmp")){
+        tonalidad(rgb,arch[i],ROJO);
+        i++;
+    }
+    if(arch[i]!=NULL && !compararString(col[i].vec+11,"tonalidad-verde.bmp")){
+        tonalidad(rgb,arch[i],VERDE);
+    }
+}
+
+void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat){
+    size_t i=0;
+
+    if(archMat[i]!=NULL && !compararString(funMat[i].vec+11,"recortar.bmp")){
+        recortar(archMat[i],mat,*alto,*ancho,*ini);
+        i++;
+    if(archMat[i]!=NULL && !compararString(funMat[i].vec+11,"rotar-derecha.bmp")){
+        rotar_derecha(archMat[i],mat,*alto,*ancho,*ini);
+       i++;
+    }
+    if(archMat[i]!=NULL && !compararString(funMat[i].vec+11,"rotar-izquierda.bmp"))
+        rotar_izquierda(archMat[i],mat,*alto,*ancho,*ini);
+    }
+}
+
+void leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cantCol){
 
     FILE* BMP=fopen(path,RB);
     if(!BMP)
         return;
 
-    if(crearArchivos(arch,funci,*tam,WB)){
+    FILE* archCol[*cantCol];
+    FILE* archMat[*cantMat];
+
+    if(crearArchivos(archMat,funMat,*cantMat,WB)){
         fclose(BMP);
         return;
     }
 
-    *meta_bmp = leerEcabezado(BMP,arch,tam);
-
-    t_pixel** mat = (t_pixel**)matrizCrear(meta_bmp->alto,meta_bmp->ancho,sizeof(t_pixel));
-
-    if(!mat){
+    if(crearArchivos(archCol,col,*cantCol,WB)){
         fclose(BMP);
-        cerrarArchivos(arch,*tam);
+        cerrarArchivos(archMat,*cantMat);
         return;
     }
 
-    size_t padding = (4 - (meta_bmp->ancho * 3) % 4) % 4;// El padding se calcula para que cada fila sea un múltiplo de 4 bytes de longitud
+    t_metadata meta_bmp = leerEcabezado(BMP,archMat,archCol,cantCol,cantMat);
+
+    size_t ini=meta_bmp.tamEncabezado+14;
+
+    for(size_t i=0;i<*cantCol;i++)
+        fseek(archCol[i],ini,SEEK_SET);
+
+    t_pixel** mat=NULL;
+    if(*cantMat>0){
+        mat = (t_pixel**)matrizCrear(meta_bmp.alto,meta_bmp.ancho,sizeof(t_pixel));
+        if(!mat){
+            fclose(BMP);
+            cerrarArchivos(archMat,*cantMat);
+            cerrarArchivos(archCol,*cantCol);
+            return;
+        }
+    }
+
+    size_t padding = (4 - (meta_bmp.ancho * 3) % 4) % 4;// El padding se calcula para que cada fila sea un múltiplo de 4 bytes de longitud
     int i=0;
-    size_t ini=meta_bmp->tamEncabezado+14;
+    t_pixel RGB;
+    RGB.profundidad=meta_bmp.profundidad;
     fseek(BMP,ini,SEEK_SET);
-    while(i<meta_bmp->alto){
-        fseek(BMP,0,SEEK_CUR);
-        for(int j=0;j<meta_bmp->ancho;j++){
-            fread(&mat[i][j].pixel,sizeof(mat[i][j].pixel),1,BMP);
-            mat[i][j].profundidad=meta_bmp->profundidad;
-            //tonalidad(mat[i][j].pixel,arch[0],ROJO);
-            //negativo(mat[i][j].pixel,arch[1]);
-            //escala_de_grises(mat[i][j].pixel,arch[2]);
+    while(i<meta_bmp.alto){
+        for(int j=0;j<meta_bmp.ancho;j++){
+            fread(&RGB.pixel,3,1,BMP);
+            if(cantCol>0)
+                funciones(RGB.pixel,archCol,col);
+            if(mat)
+                mat[i][j]=RGB;
         }
         fseek(BMP,padding,SEEK_CUR);
         i++;
     }
     fclose(BMP);
-
-    rotar_izquierda(arch[0],mat,meta_bmp->alto,meta_bmp->ancho,ini);
-    recortar(arch[1],mat,meta_bmp->alto,meta_bmp->ancho,ini);
-
-    cerrarArchivos(arch,*tam);
-    matrizElim((void**)mat,meta_bmp->alto);
-
+    if(mat){
+        funcionesMat(archMat,mat,&meta_bmp.alto,&meta_bmp.ancho,&ini,funMat);
+        matrizElim((void**)mat,meta_bmp.alto);
+    }
+    cerrarArchivos(archMat,*cantMat);
+    cerrarArchivos(archCol,*cantCol);
 }
 
 void negativo(const unsigned char pixel[],FILE* arch){
@@ -284,7 +355,7 @@ void negativo(const unsigned char pixel[],FILE* arch){
     pix[0] = 255-pix[0];
     pix[1] = 255-pix[1];
     pix[2] = 255-pix[2];
-    fwrite(pix,3,1,arch);
+    fwrite(&pix,3,1,arch);
 }
 
 void escala_de_grises(const unsigned char pixel[],FILE* arch){
@@ -297,7 +368,7 @@ void escala_de_grises(const unsigned char pixel[],FILE* arch){
     pix[0] = prom;
     pix[1] = prom;
     pix[2] = prom;
-    fwrite(pix,3,1,arch);
+    fwrite(&pix,3,1,arch);
 }
 
 void tonalidad(const unsigned char pixel[],FILE* arch,short tono){
@@ -310,7 +381,7 @@ void tonalidad(const unsigned char pixel[],FILE* arch,short tono){
         pix[tono]=255;
     else
         pix[tono]*=1.5;
-    fwrite(pix,3,1,arch);
+    fwrite(&pix,3,1,arch);
 }
 
 void rotar_derecha(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
@@ -365,36 +436,41 @@ void solucion(int argc,char* argv[])
         puts("No hay Argumentos suficientes");
         exit(SIN_PARAMETROS);
     }
-    size_t cantFun=argc-2;
-    String funci[cantFun];//Funciones a realizar
+
+    String col[7],mat[3];//Funciones a realizar
     String archBMP;//Para el Nombre del archivo
 
     //Creo tipos TDA String
     crearString(&archBMP);
-    for(short int i=0;i<cantFun;i++)
-        crearString(&(funci[i]));
 
-    short int j=0;
+    size_t k=0,t=0;
     //Saco funciones y nombre de los archivos
     for(short int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
-            insertarString(&(funci[j]),"Estudiante_");
-            insertarString(&(funci[j]),&argv[i][2]);
-            insertarString(&(funci[j]),".bmp");
-            j++;
+            if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda")){
+                crearString(&mat[k]);
+                insertarString(&mat[k],"estudiante_");
+                insertarString(&mat[k],&argv[i][2]);
+                insertarString(&mat[k],".bmp");
+                k++;
+            }else{
+                crearString(&col[t]);
+                insertarString(&col[t],"estudiante_");
+                insertarString(&col[t],&argv[i][2]);
+                insertarString(&col[t],".bmp");
+                t++;
+            }
         }else
             insertarString(&archBMP,argv[i]);
     }
 
-    t_metadata meta_bmp;
-
-    FILE* archivos[cantFun];
-
-    leerBMP(&meta_bmp,archivos,funci,archBMP.vec,&cantFun);
+    leerBMP(mat,col,archBMP.vec,&k,&t);
 
     //Elimino Tipos de Datos
     stringEliminar(&archBMP);
-    for(j=0;j<cantFun;j++)
-        stringEliminar(&funci[j]);
+    for(size_t j=0;j<t;j++)
+        stringEliminar(&col[j]);
+    for(size_t j=0;j<k;j++)
+        stringEliminar(&mat[j]);
 
 }

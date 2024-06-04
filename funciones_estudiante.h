@@ -25,7 +25,6 @@
 
 
 
-
 //Macros de errores
 #define SIN_MEMORIA 5
 #define SIN_PARAMETROS 15
