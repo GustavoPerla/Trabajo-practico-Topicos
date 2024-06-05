@@ -74,19 +74,6 @@ bool __ampliarString(String* vec,size_t tam){
     return TODO_OK;
 }
 
-bool crearVector(Vector* vec,size_t tamElem){
-    vec->vec = malloc(CAP_INI*tamElem);
-
-    if(!vec->vec)
-        return SIN_MEMORIA;
-
-    vec->cap=CAP_INI;
-    vec->ce=0;
-    vec->tamElem=tamElem;
-
-    return TODO_OK;
-}
-
 size_t largoString(void* pal){
     size_t tam=0;
     char* j = pal;
@@ -484,8 +471,8 @@ void comodin(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     }
 }
 
-void solucion(int argc,char* argv[])
-{
+void solucion(int argc,char* argv[]){
+
     if(argc<=2){ // Pregunto cuantos argumentos hay
         return;
     }
