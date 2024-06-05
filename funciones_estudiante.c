@@ -439,7 +439,7 @@ void comodin(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     }
 }
 
-bool funciExeistente(const char *pal){
+bool funciExistente(const char *pal){
     if(EXISTENTES)
         return 1;
     else
@@ -461,7 +461,7 @@ void solucion(int argc,char* argv[]){
         //Saco funciones y nombre de los archivos
         while(i<argc && p!=SIN_MEMORIA){
             if(argv[i][0]=='-'){
-                if(funciExeistente(&argv[i][2])){
+                if(funciExistente(&argv[i][2])){
                     if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
                         p=insertarStringOrd(mat,k,&argv[i][2]);
                         if(!p)
