@@ -28,9 +28,13 @@ void matrizElim(void**,const size_t);
 void tonalidad(const unsigned char[],FILE*,short);
 void negativo(const unsigned char [],FILE*);
 void escala_de_grises(const unsigned char[],FILE*);
+void aumentar_contraste(const unsigned char pixel[],FILE*);
+void reducir_contraste(const unsigned char pixel[],FILE*);
 void rotar_derecha(FILE*, t_pixel**, int32_t, int32_t,size_t);
 void rotar_izquierda(FILE*, t_pixel**, int32_t, int32_t,size_t);
 void recortar(FILE*, t_pixel** ,int32_t ,int32_t,size_t);
+void comodin(FILE*,t_pixel**,int32_t,int32_t,size_t);
+int compararString(const char*,const char*);
 
 bool crearString(String* vec){
     vec->vec = malloc(sizeof(char));
@@ -127,6 +131,30 @@ void vectorElim(Vector* vec){
 void stringEliminar(String* vec){
     free(vec->vec);
     vec->vec=NULL;
+}
+
+bool stringVaciar(String* vec){
+    if(__ampliarString(vec,1))
+        return SIN_MEMORIA;
+    vec->ce=0;
+    vec->vec='\0';
+    return TODO_OK;
+}
+
+void insertarStringOrd(String* fun,size_t cantFun,char* pal){
+    short i=0;
+    while(i<cantFun && compararString(fun[i].vec+11,pal)<0){
+        i++;
+    }
+
+    for(size_t j=cantFun;j>i;j--){
+        insertarString(&fun[j],fun[j-1].vec);
+        stringVaciar(&fun[j-1]);
+    }
+
+    insertarString(&fun[i],"estudiante_");
+    insertarString(&fun[i],pal);
+    insertarString(&fun[i],".bmp");
 }
 
 void** matrizCrear(size_t filas, size_t columnas,size_t tamElem){
@@ -230,57 +258,66 @@ t_metadata leerEcabezado(FILE* BMP,FILE* archMat[],FILE* archCol[],size_t* cantC
 }
 
 int compararString(const char* vec,const char* pal){//Devuelve 0 si son iguales, negativo si vec es men, positivo si es mayor
-    while(*vec && (*vec==*pal)){
+    while(*vec && (*vec==*pal) && *vec!='.'){
         vec++;
         pal++;
+    }
+    if(*vec=='.'){
+        vec--;
+        pal--;
     }
     return (*vec-*pal);
 }
 
-void funciones(const unsigned char* rgb,FILE* arch[],String* col){//Funciones de cambio de colores ///// OJO ESTA ORDENADO DE MENOR A MAYOR
+void funciones(const unsigned char* rgb,FILE* arch[],String* col,size_t tam){//Funciones de cambio de colores ///// OJO ESTA ORDENADO DE MENOR A MAYOR
     size_t i=0;
-    if(arch[i]!=NULL && !compararString(col[i].vec+11,"aumentar-contraste.bmp")){
-        //aumentar_contraste(rgb,arch[i])
+    if(i<tam && !compararString(col[i].vec+11,"aumentar-contraste")){
+        aumentar_contraste(rgb,arch[i]);
         i++;
     }
-    if(arch[i]!=NULL && !compararString(col[i].vec+11,"escala-de-grises.bmp")){
+    if(i<tam && !compararString(col[i].vec+11,"escala-de-grises")){
         escala_de_grises(rgb,arch[i]);
         i++;
     }
-    if(arch[i]!=NULL && !compararString(col[i].vec+11,"negativo.bmp")){
+    if(i<tam && !compararString(col[i].vec+11,"negativo")){
         negativo(rgb,arch[i]);
         i++;
     }
-    if(arch[i]!=NULL && !compararString(col[i].vec+11,"reducir-contraste.bmp")){
-        //reducir_contraste(rgb,arch[i])
+    if(i<tam && !compararString(col[i].vec+11,"reducir-contraste")){
+        reducir_contraste(rgb,arch[i]);
         i++;
     }
-    if(arch[i]!=NULL && !compararString(col[i].vec+11,"tonalidad-azul.bmp")){
+    if(i<tam && !compararString(col[i].vec+11,"tonalidad-azul")){
         tonalidad(rgb,arch[i],AZUL);
         i++;
     }
-    if(arch[i]!=NULL && !compararString(col[i].vec+11,"tonalidad-roja.bmp")){
+    if(i<tam && !compararString(col[i].vec+11,"tonalidad-roja")){
         tonalidad(rgb,arch[i],ROJO);
         i++;
     }
-    if(arch[i]!=NULL && !compararString(col[i].vec+11,"tonalidad-verde.bmp")){
+    if(i<tam && !compararString(col[i].vec+11,"tonalidad-verde")){
         tonalidad(rgb,arch[i],VERDE);
     }
 }
 
-void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat){///// OJO ESTA ORDENADO DE MENOR A MAYOR
+void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat,size_t tam){///// OJO ESTA ORDENADO DE MENOR A MAYOR
     size_t i=0;
 
-    if(archMat[i]!=NULL && !compararString(funMat[i].vec+11,"recortar.bmp")){
+    if(i<tam && !compararString(funMat[i].vec+11,"comodin")){
+        comodin(archMat[i],mat,*alto,*ancho,*ini);
+        i++;
+    }
+    if(i<tam && !compararString(funMat[i].vec+11,"recortar")){
         recortar(archMat[i],mat,*alto,*ancho,*ini);
         i++;
-    if(archMat[i]!=NULL && !compararString(funMat[i].vec+11,"rotar-derecha.bmp")){
+    }
+    if(i<tam && !compararString(funMat[i].vec+11,"rotar-derecha")){
         rotar_derecha(archMat[i],mat,*alto,*ancho,*ini);
        i++;
     }
-    if(archMat[i]!=NULL && !compararString(funMat[i].vec+11,"rotar-izquierda.bmp"))
+    if(i<tam && !compararString(funMat[i].vec+11,"rotar-izquierda"))
         rotar_izquierda(archMat[i],mat,*alto,*ancho,*ini);
-    }
+
 }
 
 void leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cantCol){
@@ -329,8 +366,8 @@ void leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cantC
     while(i<meta_bmp.alto){
         for(int j=0;j<meta_bmp.ancho;j++){
             fread(&RGB.pixel,3,1,BMP);
-            if(cantCol>0)
-                funciones(RGB.pixel,archCol,col);
+            if(*cantCol>0)
+                funciones(RGB.pixel,archCol,col,*cantCol);
             if(mat)
                 mat[i][j]=RGB;
         }
@@ -339,7 +376,7 @@ void leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cantC
     }
     fclose(BMP);
     if(mat){
-        funcionesMat(archMat,mat,&meta_bmp.alto,&meta_bmp.ancho,&ini,funMat);
+        funcionesMat(archMat,mat,&meta_bmp.alto,&meta_bmp.ancho,&ini,funMat,*cantMat);
         matrizElim((void**)mat,meta_bmp.alto);
     }
     cerrarArchivos(archMat,*cantMat);
@@ -429,6 +466,54 @@ void recortar(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     }
 }
 
+void aumentar_contraste(const unsigned char pixel[],FILE* arch){
+    unsigned char pix[3];
+    int16_t byte;
+
+    pix[0] = pixel[0];
+    pix[1] = pixel[1];
+    pix[2] = pixel[2];
+
+    byte = pix[0] + (pix[0]-128)*.25;
+    pix[0] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
+
+    byte = pix[1] + (pix[1]-128)*.25;
+    pix[1] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
+
+    byte = pix[2] + (pix[2]-128)*.25;
+    pix[2] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
+
+    fwrite(&pix,3,1,arch);
+}
+
+void reducir_contraste(const unsigned char pixel[],FILE* arch){
+    unsigned char pix[3];
+    int16_t byte;
+
+    pix[0] = pixel[0];
+    pix[1] = pixel[1];
+    pix[2] = pixel[2];
+
+    byte = pix[0] - (pix[0]-128)*.25;
+    pix[0] = (byte < 0) ? 0 : byte;
+
+    byte = pix[1] - (pix[1]-128)*.25;
+    pix[1] = (byte < 0) ? 0 : byte;
+
+    byte = pix[2] - (pix[2]-128)*.25;
+    pix[2] = (byte < 0) ? 0 : byte;
+
+    fwrite(&pix,3,1,arch);
+}
+
+void comodin(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
+    fseek(arch,ini,SEEK_SET);
+
+    for(int i = 0 ; i < fila ; i++){
+        for(int j = col-1 ; j>=0 ; j--)
+            fwrite(&mat[i][j].pixel,3,1,arch);
+    }
+}
 
 void solucion(int argc,char* argv[])
 {
@@ -437,7 +522,7 @@ void solucion(int argc,char* argv[])
         exit(SIN_PARAMETROS);
     }
 
-    String col[7],mat[3];//Funciones a realizar
+    String col[7],mat[4];//Funciones a realizar
     String archBMP;//Para el Nombre del archivo
 
     //Creo tipos TDA String
@@ -447,17 +532,13 @@ void solucion(int argc,char* argv[])
     //Saco funciones y nombre de los archivos
     for(short int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
-            if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda")){
+            if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
                 crearString(&mat[k]);
-                insertarString(&mat[k],"estudiante_");
-                insertarString(&mat[k],&argv[i][2]);
-                insertarString(&mat[k],".bmp");
+                insertarStringOrd(mat,k,&argv[i][2]);
                 k++;
             }else{
                 crearString(&col[t]);
-                insertarString(&col[t],"estudiante_");
-                insertarString(&col[t],&argv[i][2]);
-                insertarString(&col[t],".bmp");
+                insertarStringOrd(col,t,&argv[i][2]);
                 t++;
             }
         }else
