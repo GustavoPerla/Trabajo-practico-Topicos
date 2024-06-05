@@ -21,7 +21,6 @@
 
 #include "funciones_estudiante.h"
 
-bool __ampliarCapVector(Vector*);
 bool __ampliarString(String*,size_t);
 size_t largoString(void*);
 void matrizElim(void**,const size_t);
@@ -88,31 +87,6 @@ bool crearVector(Vector* vec,size_t tamElem){
     return TODO_OK;
 }
 
-bool vectorInsertarFinal(Vector* vec,const void* elem){
-    if(vec->cap==vec->ce)
-        if(!__ampliarCapVector(vec))
-            return SIN_MEMORIA;
-
-    void* posIns = vec->vec+vec->ce * vec->tamElem;
-    memcpy(posIns,elem,vec->tamElem);
-    vec->ce++;
-
-    return TODO_OK;
-}
-
-bool __ampliarCapVector(Vector* vec){
-    size_t cap = vec->cap*FACTOR_INCR;
-    void* nvec=realloc(vec->vec,cap*vec->tamElem);
-
-    if(!nvec)
-        return SIN_MEMORIA;
-
-    vec->vec=nvec;
-    vec->cap=cap;
-
-    return TODO_OK;
-}
-
 size_t largoString(void* pal){
     size_t tam=0;
     char* j = pal;
@@ -121,11 +95,6 @@ size_t largoString(void* pal){
         j++;
     }
     return tam;
-}
-
-void vectorElim(Vector* vec){
-    free(vec->vec);
-    vec->vec = NULL;
 }
 
 void stringEliminar(String* vec){
@@ -269,7 +238,7 @@ int compararString(const char* vec,const char* pal){//Devuelve 0 si son iguales,
     return (*vec-*pal);
 }
 
-void funciones(const unsigned char* rgb,FILE* arch[],String* col,size_t tam){//Funciones de cambio de colores ///// OJO ESTA ORDENADO DE MENOR A MAYOR
+void funciones(const unsigned char* rgb,FILE* arch[],String* col,size_t tam){//Funciones de cambio de colores
     size_t i=0;
     if(i<tam && !compararString(col[i].vec+11,"aumentar-contraste")){
         aumentar_contraste(rgb,arch[i]);
@@ -300,7 +269,7 @@ void funciones(const unsigned char* rgb,FILE* arch[],String* col,size_t tam){//F
     }
 }
 
-void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat,size_t tam){///// OJO ESTA ORDENADO DE MENOR A MAYOR
+void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat,size_t tam){//Funciones que requieren matriz
     size_t i=0;
 
     if(i<tam && !compararString(funMat[i].vec+11,"comodin")){
