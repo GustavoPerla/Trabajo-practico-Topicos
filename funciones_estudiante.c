@@ -486,9 +486,8 @@ void comodin(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
 
 void solucion(int argc,char* argv[])
 {
-    if(argc<=1){ // Pregunto cuantos argumentos hay
-        puts("No hay Argumentos suficientes");
-        exit(SIN_PARAMETROS);
+    if(argc<=2){ // Pregunto cuantos argumentos hay
+        return;
     }
 
     String col[7],mat[4];//Funciones a realizar
