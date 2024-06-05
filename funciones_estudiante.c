@@ -483,11 +483,11 @@ void solucion(int argc,char* argv[]){
             leerBMP(mat,col,archBMP.vec,&k,&t);
         }
     //Elimino Tipos de Datos
-    if(x)
-        stringEliminar(&archBMP);
-    for(size_t j=0;j<t;j++)
-        stringEliminar(&col[j]);
-    for(size_t j=0;j<k;j++)
-        stringEliminar(&mat[j]);
+        if(x)
+            stringEliminar(&archBMP);
+        for(size_t j=0;j<t;j++)
+            stringEliminar(&col[j]);
+        for(size_t j=0;j<k;j++)
+            stringEliminar(&mat[j]);
     }
 }
