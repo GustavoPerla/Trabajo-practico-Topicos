@@ -31,7 +31,7 @@
                 || !compararString(pal,"tonalidad-roja")\
                 || !compararString(pal,"tonalidad-azul")\
                 || !compararString(pal,"tonalidad-verde")\
-                || !compararString(pal,"negativo")\
+                || !compararString(pal,"negativo")
 
 bool __ampliarString(String*,size_t);
 size_t largoString(void*);
@@ -356,23 +356,16 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
 
 void negativo(const unsigned char pixel[],FILE* arch){
     unsigned char pix[3];
-    pix[0] = pixel[0];
-    pix[1] = pixel[1];
-    pix[2] = pixel[2];
-
-    pix[0] = 255-pix[0];
-    pix[1] = 255-pix[1];
-    pix[2] = 255-pix[2];
+    pix[0] = 255-pixel[0];
+    pix[1] = 255-pixel[1];
+    pix[2] = 255-pixel[2];
     fwrite(&pix,3,1,arch);
 }
 
 void escala_de_grises(const unsigned char pixel[],FILE* arch){
     unsigned char pix[3];
-    pix[0] = pixel[0];
-    pix[1] = pixel[1];
-    pix[2] = pixel[2];
 
-    uint8_t prom =(pix[0]+pix[1]+pix[2])/3;
+    uint8_t prom =(pixel[0]+pixel[1]+pixel[2])/3;
     pix[0] = prom;
     pix[1] = prom;
     pix[2] = prom;
@@ -381,14 +374,14 @@ void escala_de_grises(const unsigned char pixel[],FILE* arch){
 
 void tonalidad(const unsigned char pixel[],FILE* arch,short tono){
     unsigned char pix[3];
-    pix[0] = pixel[0];
-    pix[1] = pixel[1];
-    pix[2] = pixel[2];
+    pix[0]=pixel[0];
+    pix[1]=pixel[1];
+    pix[2]=pixel[2];
 
-    if(pix[tono]*1.5>255)
+    if(pixel[tono]*1.5>255)
         pix[tono]=255;
     else
-        pix[tono]*=1.5;
+        pix[tono]=pixel[tono]*1.5;
     fwrite(&pix,3,1,arch);
 }
 
@@ -425,17 +418,13 @@ void contraste(const unsigned char pixel[],FILE* arch,short opcion){
     unsigned char pix[3];
     int16_t byte;
 
-    pix[0] = pixel[0];
-    pix[1] = pixel[1];
-    pix[2] = pixel[2];
-
-    byte = pix[0] + ((pix[0]-128)*.25)*opcion;
+    byte = pixel[0] + ((pixel[0]-128)*.25)*opcion;
     pix[0] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
 
-    byte = pix[1] + ((pix[1]-128)*.25)*opcion;
+    byte = pixel[1] + ((pixel[1]-128)*.25)*opcion;
     pix[1] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
 
-    byte = pix[2] + ((pix[2]-128)*.25)*opcion;
+    byte = pixel[2] + ((pixel[2]-128)*.25)*opcion;
     pix[2] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
 
     fwrite(&pix,3,1,arch);
@@ -490,7 +479,7 @@ void solucion(int argc,char* argv[]){
             }
             i++;
         }
-        if(p!=SIN_MEMORIA){
+        if(p!=SIN_MEMORIA && (k>0 || t>0)){
             leerBMP(mat,col,archBMP.vec,&k,&t);
         }
     //Elimino Tipos de Datos
