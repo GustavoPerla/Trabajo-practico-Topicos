@@ -31,14 +31,6 @@
 #define ERROR_AL_ABRIR_ARCHIVOS 30
 #define REPETIDO 27
 
-
-typedef struct{
-    void* vec;
-    size_t ce;
-    size_t cap;
-    size_t tamElem;
-}Vector;
-
 typedef struct{
     void* vec;
     size_t ce;
