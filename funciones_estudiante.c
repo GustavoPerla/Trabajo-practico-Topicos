@@ -27,8 +27,7 @@ void matrizElim(void**,const size_t);
 void tonalidad(const unsigned char[],FILE*,short);
 void negativo(const unsigned char [],FILE*);
 void escala_de_grises(const unsigned char[],FILE*);
-void aumentar_contraste(const unsigned char pixel[],FILE*);
-void reducir_contraste(const unsigned char pixel[],FILE*);
+void contraste(const unsigned char pixel[],FILE*,short);
 void rotar_derecha(FILE*, t_pixel**, int32_t, int32_t,size_t);
 void rotar_izquierda(FILE*, t_pixel**, int32_t, int32_t,size_t);
 void recortar(FILE*, t_pixel** ,int32_t ,int32_t,size_t);
@@ -233,7 +232,7 @@ int compararString(const char* vec,const char* pal){//Devuelve 0 si son iguales,
 void funciones(const unsigned char* rgb,FILE* arch[],String* col,size_t tam){//Funciones de cambio de colores
     size_t i=0;
     if(i<tam && !compararString(col[i].vec+11,"aumentar-contraste")){
-        aumentar_contraste(rgb,arch[i]);
+        contraste(rgb,arch[i],AUMENTAR);
         i++;
     }
     if(i<tam && !compararString(col[i].vec+11,"escala-de-grises")){
@@ -245,7 +244,7 @@ void funciones(const unsigned char* rgb,FILE* arch[],String* col,size_t tam){//F
         i++;
     }
     if(i<tam && !compararString(col[i].vec+11,"reducir-contraste")){
-        reducir_contraste(rgb,arch[i]);
+        contraste(rgb,arch[i],REDUCIR);
         i++;
     }
     if(i<tam && !compararString(col[i].vec+11,"tonalidad-azul")){
@@ -427,7 +426,7 @@ void recortar(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     }
 }
 
-void aumentar_contraste(const unsigned char pixel[],FILE* arch){
+void contraste(const unsigned char pixel[],FILE* arch,short opcion){
     unsigned char pix[3];
     int16_t byte;
 
@@ -435,34 +434,14 @@ void aumentar_contraste(const unsigned char pixel[],FILE* arch){
     pix[1] = pixel[1];
     pix[2] = pixel[2];
 
-    byte = pix[0] + (pix[0]-128)*.25;
+    byte = pix[0] + ((pix[0]-128)*.25)*opcion;
     pix[0] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
 
-    byte = pix[1] + (pix[1]-128)*.25;
+    byte = pix[1] + ((pix[1]-128)*.25)*opcion;
     pix[1] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
 
-    byte = pix[2] + (pix[2]-128)*.25;
+    byte = pix[2] + ((pix[2]-128)*.25)*opcion;
     pix[2] = (byte > 255) ? 255 : (byte < 0) ? 0 : byte;
-
-    fwrite(&pix,3,1,arch);
-}
-
-void reducir_contraste(const unsigned char pixel[],FILE* arch){
-    unsigned char pix[3];
-    int16_t byte;
-
-    pix[0] = pixel[0];
-    pix[1] = pixel[1];
-    pix[2] = pixel[2];
-
-    byte = pix[0] - (pix[0]-128)*.25;
-    pix[0] = (byte < 0) ? 0 : byte;
-
-    byte = pix[1] - (pix[1]-128)*.25;
-    pix[1] = (byte < 0) ? 0 : byte;
-
-    byte = pix[2] - (pix[2]-128)*.25;
-    pix[2] = (byte < 0) ? 0 : byte;
 
     fwrite(&pix,3,1,arch);
 }
@@ -485,32 +464,31 @@ void solucion(int argc,char* argv[]){
     String col[7],mat[4];//Funciones a realizar
     String archBMP;//Para el Nombre del archivo
 
-    //Creo tipos TDA String
-    crearString(&archBMP);
-    bool x;
-    size_t k=0,t=0,p=0,i=1;
-    //Saco funciones y nombre de los archivos
-    while(i<argc && p!=SIN_MEMORIA){
-        if(argv[i][0]=='-'){
-            if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
-                p=insertarStringOrd(mat,k,&argv[i][2]);
-                if(!p)
-                    k++;
+    if(!crearString(&archBMP)){
+        bool x;
+        size_t k=0,t=0,p=0,i=1;
+        //Saco funciones y nombre de los archivos
+        while(i<argc && p!=SIN_MEMORIA){
+            if(argv[i][0]=='-'){
+                if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
+                    p=insertarStringOrd(mat,k,&argv[i][2]);
+                    if(!p)
+                        k++;
+                }else{
+                    p=insertarStringOrd(col,t,&argv[i][2]);
+                    if(!p)
+                        t++;
+                }
             }else{
-                p=insertarStringOrd(col,t,&argv[i][2]);
+                p=insertarString(&archBMP,argv[i]);
                 if(!p)
-                    t++;
+                    x=true;
             }
-        }else{
-            p=insertarString(&archBMP,argv[i]);
-            if(!p)
-                x=true;
+            i++;
         }
-        i++;
-    }
-    if(p!=SIN_MEMORIA){
-        leerBMP(mat,col,archBMP.vec,&k,&t);
-    }
+        if(p!=SIN_MEMORIA){
+            leerBMP(mat,col,archBMP.vec,&k,&t);
+        }
     //Elimino Tipos de Datos
     if(x)
         stringEliminar(&archBMP);
@@ -518,4 +496,5 @@ void solucion(int argc,char* argv[]){
         stringEliminar(&col[j]);
     for(size_t j=0;j<k;j++)
         stringEliminar(&mat[j]);
+    }
 }
