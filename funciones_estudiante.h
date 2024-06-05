@@ -21,8 +21,8 @@
 #define AZUL 0
 #define VERDE 1
 #define ROJO 2
-#define AUMENTAR 1
-#define REDUCIR -1
+#define AUMENTAR 1// Contraste
+#define REDUCIR -1// Contraste
 
 //Macros de errores
 #define SIN_MEMORIA 5
