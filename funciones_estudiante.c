@@ -7,10 +7,10 @@
     DNI: 43386388
     Entrega: Si
     -----------------
-    Apellido:
-    Nombre:
-    DNI:
-    Entrega:
+    Apellido:Ibarra
+    Nombre: Gustavo
+    DNI: 42887359
+    Entrega: Si
     -----------------
     Apellido:
     Nombre:
@@ -20,6 +20,18 @@
 */
 
 #include "funciones_estudiante.h"
+
+#define EXISTENTES !compararString(pal,"escala-de-grises")\
+                || !compararString(pal,"comodin")\
+                || !compararString(pal,"recortar")\
+                || !compararString(pal,"rotar-derecha")\
+                || !compararString(pal,"rotar-izquierda")\
+                || !compararString(pal,"aumentar-contraste")\
+                || !compararString(pal,"reducir-contraste")\
+                || !compararString(pal,"tonalidad-roja")\
+                || !compararString(pal,"tonalidad-azul")\
+                || !compararString(pal,"tonalidad-verde")\
+                || !compararString(pal,"negativo")\
 
 bool __ampliarString(String*,size_t);
 size_t largoString(void*);
@@ -438,6 +450,13 @@ void comodin(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     }
 }
 
+bool funciExeistente(const char *pal){
+    if(EXISTENTES)
+        return 1;
+    else
+        return 0;
+}
+
 void solucion(int argc,char* argv[]){
 
     if(argc<=2){ // Pregunto cuantos argumentos hay
@@ -453,14 +472,16 @@ void solucion(int argc,char* argv[]){
         //Saco funciones y nombre de los archivos
         while(i<argc && p!=SIN_MEMORIA){
             if(argv[i][0]=='-'){
-                if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
-                    p=insertarStringOrd(mat,k,&argv[i][2]);
-                    if(!p)
-                        k++;
-                }else{
-                    p=insertarStringOrd(col,t,&argv[i][2]);
-                    if(!p)
-                        t++;
+                if(funciExeistente(&argv[i][2])){
+                    if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
+                        p=insertarStringOrd(mat,k,&argv[i][2]);
+                        if(!p)
+                            k++;
+                    }else{
+                        p=insertarStringOrd(col,t,&argv[i][2]);
+                        if(!p)
+                            t++;
+                    }
                 }
             }else{
                 p=insertarString(&archBMP,argv[i]);
