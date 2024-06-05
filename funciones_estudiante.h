@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdint.h>
 
-
 //Headers
 #include "constantes.h"
 #include "estructuras.h"
@@ -23,13 +22,12 @@
 #define VERDE 1
 #define ROJO 2
 
-
-
 //Macros de errores
 #define SIN_MEMORIA 5
 #define SIN_PARAMETROS 15
 #define FUNC_INEXI 25
 #define ERROR_AL_ABRIR_ARCHIVOS 30
+#define REPETIDO 27
 
 
 typedef struct{

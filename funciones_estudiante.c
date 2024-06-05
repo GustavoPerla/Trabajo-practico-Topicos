@@ -97,20 +97,25 @@ bool stringVaciar(String* vec){
     return TODO_OK;
 }
 
-void insertarStringOrd(String* fun,size_t cantFun,char* pal){
+short insertarStringOrd(String* fun,size_t cantFun,char* pal){
     short i=0;
     while(i<cantFun && compararString(fun[i].vec+11,pal)<0){
         i++;
     }
 
-    for(size_t j=cantFun;j>i;j--){
-        insertarString(&fun[j],fun[j-1].vec);
-        stringVaciar(&fun[j-1]);
-    }
-
-    insertarString(&fun[i],"estudiante_");
-    insertarString(&fun[i],pal);
-    insertarString(&fun[i],".bmp");
+    if((i<cantFun && compararString(fun[i].vec+11,pal)) || i==cantFun){
+        if(crearString(&fun[cantFun]))
+            return SIN_MEMORIA;
+        for(size_t j=cantFun;j>i;j--){
+            insertarString(&fun[j],fun[j-1].vec);
+            stringVaciar(&fun[j-1]);
+        }
+        insertarString(&fun[i],"estudiante_");
+        insertarString(&fun[i],pal);
+        insertarString(&fun[i],".bmp");
+        return TODO_OK;
+    }else
+        return REPETIDO;
 }
 
 void** matrizCrear(size_t filas, size_t columnas,size_t tamElem){
@@ -482,31 +487,35 @@ void solucion(int argc,char* argv[]){
 
     //Creo tipos TDA String
     crearString(&archBMP);
-
-    size_t k=0,t=0;
+    bool x;
+    size_t k=0,t=0,p=0,i=1;
     //Saco funciones y nombre de los archivos
-    for(short int i=1;i<argc;i++){
+    while(i<argc && p!=SIN_MEMORIA){
         if(argv[i][0]=='-'){
             if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
-                crearString(&mat[k]);
-                insertarStringOrd(mat,k,&argv[i][2]);
-                k++;
+                p=insertarStringOrd(mat,k,&argv[i][2]);
+                if(!p)
+                    k++;
             }else{
-                crearString(&col[t]);
-                insertarStringOrd(col,t,&argv[i][2]);
-                t++;
+                p=insertarStringOrd(col,t,&argv[i][2]);
+                if(!p)
+                    t++;
             }
-        }else
-            insertarString(&archBMP,argv[i]);
+        }else{
+            p=insertarString(&archBMP,argv[i]);
+            if(!p)
+                x=true;
+        }
+        i++;
     }
-
-    leerBMP(mat,col,archBMP.vec,&k,&t);
-
+    if(p!=SIN_MEMORIA){
+        leerBMP(mat,col,archBMP.vec,&k,&t);
+    }
     //Elimino Tipos de Datos
-    stringEliminar(&archBMP);
+    if(x)
+        stringEliminar(&archBMP);
     for(size_t j=0;j<t;j++)
         stringEliminar(&col[j]);
     for(size_t j=0;j<k;j++)
         stringEliminar(&mat[j]);
-
 }
