@@ -23,6 +23,8 @@
 #define ROJO 2
 #define AUMENTAR 1// Contraste
 #define REDUCIR -1// Contraste
+#define DERECHA 0
+#define IZQUIERDA 1
 
 //Macros de errores
 #define SIN_MEMORIA 5
@@ -36,24 +38,6 @@ typedef struct{
     size_t ce;
     size_t cap;
 }String;
-
-typedef struct{
-    uint16_t nom;
-    uint32_t tamArch;
-    uint32_t reservado;
-    uint32_t offset;
-    uint32_t tamCabecera;
-    uint32_t ancho;
-    uint32_t alto;
-    uint16_t numplanos;
-    uint16_t tamPuntos;
-    uint32_t compresion;
-    uint32_t tamImagen;
-    uint32_t resolucionH;
-    uint32_t resolucionV;
-    uint32_t tamTablaColor;
-    uint32_t contColImpo;
-}EncabezadoBMP;
 
 void solucion(int argc, char* argv[]);
 size_t largoString(void*);

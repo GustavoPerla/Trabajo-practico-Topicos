@@ -189,9 +189,6 @@ void copiarEncabezado(FILE* arch[],size_t* tam,t_metadata bits){
         fwrite(&bits.alto,sizeof(unsigned int),1,arch[i]);
         fseek(arch[i],28,SEEK_SET);
         fwrite(&bits.profundidad,sizeof(unsigned short),1,arch[i]);
-        fseek(arch[i],34,SEEK_SET);
-        size_t tam = 3*bits.alto*bits.ancho;
-        fwrite(&tam,sizeof(unsigned int),1,arch[i]);
     }
 }
 
@@ -247,9 +244,8 @@ void funciones(const unsigned char* rgb,FILE* arch[],String* col,size_t tam){//F
         tonalidad(rgb,arch[i],ROJO);
         i++;
     }
-    if(i<tam && !compararString(col[i].vec+11,"tonalidad-verde")){
+    if(i<tam && !compararString(col[i].vec+11,"tonalidad-verde"))
         tonalidad(rgb,arch[i],VERDE);
-    }
 }
 
 void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int* ancho,size_t* ini,String* funMat,size_t tam){//Funciones que requieren matriz
@@ -271,10 +267,8 @@ void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int*
         rotar(archMat[i],mat,*alto,*ancho,*ini,IZQUIERDA);
         i++;
     }
-    if(i<tam && !compararString(funMat[i].vec+11,"rotar-total")){
+    if(i<tam && !compararString(funMat[i].vec+11,"rotar-total"))
         rotar_total(archMat[i],mat,*alto,*ancho,*ini);
-        i++;
-    }
 }
 
 void pad(size_t tam,FILE* arch){//Padding
@@ -299,7 +293,7 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
         return ERROR_AL_ABRIR_ARCHIVOS;
     }
 
-     if(crearArchivos(archCol,col,*cantCol,WB)){
+    if(crearArchivos(archCol,col,*cantCol,WB)){
         fclose(BMP);
         cerrarArchivos(archMat,*cantMat);
         return ERROR_AL_ABRIR_ARCHIVOS;
@@ -327,7 +321,6 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
     }
 
     size_t padding = (4 - (meta_bmp.ancho * 3) % 4) % 4;// El padding se calcula para que cada fila sea un múltiplo de 4 bytes de longitud
-
     int i=0;
     t_pixel RGB;
     RGB.profundidad=meta_bmp.profundidad;
@@ -337,7 +330,7 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
             fread(&RGB.pixel,3,1,BMP);
             if(*cantCol>0)
                 funciones(RGB.pixel,archCol,col,*cantCol);
-            if(*mat)
+            if(mat!=NULL)
                 mat[i][j]=RGB;
         }
         if(padding)
@@ -347,7 +340,7 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
         i++;
     }
     fclose(BMP);
-    if(*mat){
+    if(mat!=NULL){
         funcionesMat(archMat,mat,&meta_bmp.alto,&meta_bmp.ancho,&ini,funMat,*cantMat);
         matrizElim((void**)mat,meta_bmp.alto);
     }
@@ -398,11 +391,10 @@ void rotar(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini,short o
         senCol=col;
         senFil=1;
     }else
-        if(opc==1){
+        if(opc){
             senCol=1;
             senFil=fila;
         }
-
     for(int i=0;i<col;i++){
         for(int j=0;j<fila;j++)
             fwrite(&mat[abs(senFil-1-j)][abs(senCol-1-i)].pixel,3,1,arch);
@@ -460,10 +452,6 @@ void comodin(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     }
 }
 
-bool funciExistente(const char *pal){
-    return EXISTENTESCOL(pal) || EXISTENTESMAT(pal);
-}
-
 void solucion(int argc,char* argv[]){
 
     if(argc<=2){ // Pregunto cuantos argumentos hay
@@ -479,17 +467,16 @@ void solucion(int argc,char* argv[]){
         //Saco funciones y nombre de los archivos
         while(i<argc && p!=SIN_MEMORIA){
             if(argv[i][0]=='-'){
-                if(funciExistente(&argv[i][2])){
-                    if(EXISTENTESMAT(&argv[i][2])){
-                        p=insertarStringOrd(mat,k,&argv[i][2]);
-                        if(!p)
-                            k++;
-                    }else{
+                if(EXISTENTESMAT(&argv[i][2])){
+                    p=insertarStringOrd(mat,k,&argv[i][2]);
+                    if(!p)
+                        k++;
+                }else
+                    if(EXISTENTESCOL(&argv[i][2])){
                         p=insertarStringOrd(col,t,&argv[i][2]);
                         if(!p)
                             t++;
                     }
-                }
             }else{
                 p=insertarString(&archBMP,argv[i]);
                 if(!p)
