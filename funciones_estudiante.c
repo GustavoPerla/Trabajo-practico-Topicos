@@ -21,17 +21,19 @@
 
 #include "funciones_estudiante.h"
 
-#define EXISTENTES !compararString(pal,"escala-de-grises")\
-                || !compararString(pal,"comodin")\
-                || !compararString(pal,"recortar")\
-                || !compararString(pal,"rotar-derecha")\
-                || !compararString(pal,"rotar-izquierda")\
-                || !compararString(pal,"aumentar-contraste")\
-                || !compararString(pal,"reducir-contraste")\
-                || !compararString(pal,"tonalidad-roja")\
-                || !compararString(pal,"tonalidad-azul")\
-                || !compararString(pal,"tonalidad-verde")\
-                || !compararString(pal,"negativo")
+#define EXISTENTESCOL(pal) !compararString(pal,"escala-de-grises")\
+                        || !compararString(pal,"aumentar-contraste")\
+                        || !compararString(pal,"reducir-contraste")\
+                        || !compararString(pal,"tonalidad-roja")\
+                        || !compararString(pal,"tonalidad-azul")\
+                        || !compararString(pal,"tonalidad-verde")\
+                        || !compararString(pal,"negativo")
+
+#define EXISTENTESMAT(pal) !compararString(pal,"rotar-total")\
+                        || !compararString(pal,"rotar-derecha")\
+                        || !compararString(pal,"rotar-izquierda")\
+                        || !compararString(pal,"comodin")\
+                        || !compararString(pal,"recortar")
 
 bool __ampliarString(String*,size_t);
 size_t largoString(void*);
@@ -40,10 +42,11 @@ void tonalidad(const unsigned char[],FILE*,short);
 void negativo(const unsigned char [],FILE*);
 void escala_de_grises(const unsigned char[],FILE*);
 void contraste(const unsigned char pixel[],FILE*,short);
-void rotar(FILE*, t_pixel**, int32_t, int32_t,size_t,size_t,size_t);
+void rotar(FILE*, t_pixel**, int32_t, int32_t,size_t,short);
 void recortar(FILE*, t_pixel** ,int32_t ,int32_t,size_t);
 void comodin(FILE*,t_pixel**,int32_t,int32_t,size_t);
 int compararString(const char*,const char*);
+void rotar_total(FILE*,t_pixel**,int32_t,int32_t,size_t);
 
 bool crearString(String* vec){
     vec->vec = malloc(sizeof(char));
@@ -173,58 +176,36 @@ bool crearArchivos(FILE* arch[],String* path,const size_t ce,const char* apertur
     return TODO_OK;
 }
 
-void copiarEncabezado(FILE* arch[],size_t* tam,EncabezadoBMP bits){
+void copiarEncabezado(FILE* arch[],size_t* tam,t_metadata bits){
     for(size_t i=0;i<*tam;i++){// Copio el encabezado en todos los archivos creados
-        fseek(arch[i],0,SEEK_SET);
-        fwrite(&bits.nom,2,1,arch[i]);
-        fwrite(&bits.tamArch,sizeof(int),1,arch[i]);
-        fwrite(&bits.reservado,sizeof(int),1,arch[i]);
-        fwrite(&bits.offset,sizeof(int),1,arch[i]);
-        fwrite(&bits.tamCabecera,sizeof(int),1,arch[i]);
-        fwrite(&bits.ancho,sizeof(int),1,arch[i]);
-        fwrite(&bits.alto,sizeof(int),1,arch[i]);
-        fwrite(&bits.numplanos,sizeof(short),1,arch[i]);
-        fwrite(&bits.tamPuntos,sizeof(short),1,arch[i]);
-        fwrite(&bits.compresion,sizeof(int),1,arch[i]);
-        fwrite(&bits.tamImagen,sizeof(int),1,arch[i]);
-        fwrite(&bits.resolucionH,sizeof(int),1,arch[i]);
-        fwrite(&bits.resolucionV,sizeof(int),1,arch[i]);
-        fwrite(&bits.tamTablaColor,sizeof(int),1,arch[i]);
-        fwrite(&bits.contColImpo,sizeof(int),1,arch[i]);
+        fwrite("BM",2,1,arch[i]);
+        fwrite(&bits.tamArchivo,sizeof(unsigned int),1,arch[i]);
+        fseek(arch[i],10,SEEK_SET);
+        uint32_t ini = bits.tamEncabezado+14;
+        fwrite(&ini,sizeof(unsigned int),1,arch[i]);
+        fwrite(&bits.tamEncabezado,sizeof(unsigned int),1,arch[i]);
+        fseek(arch[i],18,SEEK_SET);
+        fwrite(&bits.ancho,sizeof(unsigned int),1,arch[i]);
+        fwrite(&bits.alto,sizeof(unsigned int),1,arch[i]);
+        fseek(arch[i],28,SEEK_SET);
+        fwrite(&bits.profundidad,sizeof(unsigned short),1,arch[i]);
+        fseek(arch[i],34,SEEK_SET);
+        size_t tam = 3*bits.alto*bits.ancho;
+        fwrite(&tam,sizeof(unsigned int),1,arch[i]);
     }
 }
 
-t_metadata leerEcabezado(FILE* BMP,FILE* archMat[],FILE* archCol[],size_t* cantCol,size_t* cantMat){
-    EncabezadoBMP bits;
+t_metadata leerEcabezado(FILE* BMP){
     t_metadata meta;
-    fseek(BMP,0,SEEK_SET);
 
-    fread(&bits.nom,sizeof(bits.nom),1,BMP);
-    fread(&bits.tamArch,sizeof(int),1,BMP);
-    fread(&bits.reservado,sizeof(int),1,BMP);
-    fread(&bits.offset,sizeof(int),1,BMP);
-    fread(&bits.tamCabecera,sizeof(int),1,BMP);
-    fread(&bits.ancho,sizeof(int),1,BMP);
-    fread(&bits.alto,sizeof(int),1,BMP);
-    fread(&bits.numplanos,sizeof(short),1,BMP);
-    fread(&bits.tamPuntos,sizeof(short),1,BMP);
-    fread(&bits.compresion,sizeof(int),1,BMP);
-    fread(&bits.tamImagen,sizeof(int),1,BMP);
-    fread(&bits.resolucionH,sizeof(int),1,BMP);
-    fread(&bits.resolucionV,sizeof(int),1,BMP);
-    fread(&bits.tamTablaColor,sizeof(int),1,BMP);
-    fread(&bits.contColImpo,sizeof(int),1,BMP);
-
-    //Saco datos importantes
-    meta.alto=bits.alto;
-    meta.ancho=bits.ancho;
-    meta.profundidad=bits.tamPuntos;
-    meta.tamArchivo=bits.tamArch;
-    meta.tamEncabezado=bits.tamCabecera;
-
-    copiarEncabezado(archMat,cantMat,bits);
-    copiarEncabezado(archCol,cantCol,bits);
-
+    fseek(BMP,2,SEEK_SET);
+    fread(&meta.tamArchivo,sizeof(int),1,BMP);
+    fseek(BMP,14,SEEK_SET);
+    fread(&meta.tamEncabezado,sizeof(int),1,BMP);
+    fread(&meta.ancho,sizeof(int),1,BMP);
+    fread(&meta.alto,sizeof(int),1,BMP);
+    fseek(BMP,28,SEEK_SET);
+    fread(&meta.profundidad,sizeof(short),1,BMP);
     return meta;
 }
 
@@ -283,11 +264,25 @@ void funcionesMat(FILE* archMat[],t_pixel** mat,unsigned int* alto,unsigned int*
         i++;
     }
     if(i<tam && !compararString(funMat[i].vec+11,"rotar-derecha")){
-        rotar(archMat[i],mat,*alto,*ancho,*ini,1,*ancho);
+        rotar(archMat[i],mat,*alto,*ancho,*ini,DERECHA);
        i++;
     }
-    if(i<tam && !compararString(funMat[i].vec+11,"rotar-izquierda"))
-        rotar(archMat[i],mat,*alto,*ancho,*ini,*alto,1);
+    if(i<tam && !compararString(funMat[i].vec+11,"rotar-izquierda")){
+        rotar(archMat[i],mat,*alto,*ancho,*ini,IZQUIERDA);
+        i++;
+    }
+    if(i<tam && !compararString(funMat[i].vec+11,"rotar-total")){
+        rotar_total(archMat[i],mat,*alto,*ancho,*ini);
+        i++;
+    }
+}
+
+void pad(size_t tam,FILE* arch){//Padding
+    size_t padding = (4 - (tam * 3) % 4) % 4;
+    uint8_t z=0;
+
+    for(int k=0;k<padding;k++)
+        fwrite(&z,sizeof(uint8_t),1,arch);
 }
 
 short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cantCol){
@@ -304,13 +299,16 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
         return ERROR_AL_ABRIR_ARCHIVOS;
     }
 
-    if(crearArchivos(archCol,col,*cantCol,WB)){
+     if(crearArchivos(archCol,col,*cantCol,WB)){
         fclose(BMP);
         cerrarArchivos(archMat,*cantMat);
         return ERROR_AL_ABRIR_ARCHIVOS;
     }
 
-    t_metadata meta_bmp = leerEcabezado(BMP,archMat,archCol,cantCol,cantMat);
+    t_metadata meta_bmp = leerEcabezado(BMP);
+
+    copiarEncabezado(archCol,cantCol,meta_bmp);
+    copiarEncabezado(archMat,cantMat,meta_bmp);
 
     size_t ini=meta_bmp.tamEncabezado+14;
 
@@ -329,6 +327,7 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
     }
 
     size_t padding = (4 - (meta_bmp.ancho * 3) % 4) % 4;// El padding se calcula para que cada fila sea un múltiplo de 4 bytes de longitud
+
     int i=0;
     t_pixel RGB;
     RGB.profundidad=meta_bmp.profundidad;
@@ -338,14 +337,17 @@ short leerBMP(String* funMat,String* col,char* path,size_t* cantMat,size_t* cant
             fread(&RGB.pixel,3,1,BMP);
             if(*cantCol>0)
                 funciones(RGB.pixel,archCol,col,*cantCol);
-            if(mat)
+            if(*mat)
                 mat[i][j]=RGB;
         }
+        if(padding)
+            for(int j=0;j<*cantCol;j++)
+                pad(meta_bmp.ancho,archCol[j]);
         fseek(BMP,padding,SEEK_CUR);
         i++;
     }
     fclose(BMP);
-    if(mat){
+    if(*mat){
         funcionesMat(archMat,mat,&meta_bmp.alto,&meta_bmp.ancho,&ini,funMat,*cantMat);
         matrizElim((void**)mat,meta_bmp.alto);
     }
@@ -385,19 +387,36 @@ void tonalidad(const unsigned char pixel[],FILE* arch,short tono){
     fwrite(&pix,3,1,arch);
 }
 
-void rotar(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini,size_t aFila, size_t aCol){
+void rotar(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini,short opc){
     fseek(arch,18,SEEK_SET);
     fwrite(&fila,sizeof(int),1,arch);
     fwrite(&col,sizeof(int),1,arch);
     fseek(arch,ini,SEEK_SET);
 
-    size_t padding = (4 - (col * 3) % 4) % 4;
-    uint8_t z=0;
+    size_t senCol, senFil;
+    if(!opc){
+        senCol=col;
+        senFil=1;
+    }else
+        if(opc==1){
+            senCol=1;
+            senFil=fila;
+        }
+
     for(int i=0;i<col;i++){
         for(int j=0;j<fila;j++)
-            fwrite(&mat[abs(aFila-1-j)][abs(aCol-1-i)].pixel,3,1,arch);
-        for(int j=0;j<padding;j++)
-            fwrite(&z,1,1,arch);
+            fwrite(&mat[abs(senFil-1-j)][abs(senCol-1-i)].pixel,3,1,arch);
+        pad(fila,arch);
+    }
+}
+
+void rotar_total(FILE* arch,t_pixel** mat,int32_t fila,int32_t col,size_t ini){
+    fseek(arch,ini,SEEK_SET);
+
+    for(int i=fila-1;i>=0;i--){
+        for(int j=col-1;j>=0;j--)
+            fwrite(&mat[i][j].pixel,3,1,arch);
+        pad(fila,arch);
     }
 }
 
@@ -411,6 +430,7 @@ void recortar(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     for(int i=fila/2;i<fila;i++){
         for(int j=0;j<col/2;j++)
             fwrite(&mat[i][j].pixel,3,1,arch);
+        pad(col/2,arch);
     }
 }
 
@@ -436,14 +456,12 @@ void comodin(FILE* arch, t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     for(int i = 0 ; i < fila ; i++){
         for(int j = col-1 ; j>=0 ; j--)
             fwrite(&mat[i][j].pixel,3,1,arch);
+        pad(col,arch);
     }
 }
 
 bool funciExistente(const char *pal){
-    if(EXISTENTES)
-        return 1;
-    else
-        return 0;
+    return EXISTENTESCOL(pal) || EXISTENTESMAT(pal);
 }
 
 void solucion(int argc,char* argv[]){
@@ -452,7 +470,7 @@ void solucion(int argc,char* argv[]){
         return;
     }
 
-    String col[7],mat[4];//Funciones a realizar
+    String col[7],mat[5];//Funciones a realizar
     String archBMP;//Para el Nombre del archivo
 
     if(!crearString(&archBMP)){
@@ -462,7 +480,7 @@ void solucion(int argc,char* argv[]){
         while(i<argc && p!=SIN_MEMORIA){
             if(argv[i][0]=='-'){
                 if(funciExistente(&argv[i][2])){
-                    if(!compararString(&argv[i][2],"recortar") || !compararString(&argv[i][2],"rotar-derecha") || !compararString(&argv[i][2],"rotar-izquierda") || !compararString(&argv[i][2],"comodin")){
+                    if(EXISTENTESMAT(&argv[i][2])){
                         p=insertarStringOrd(mat,k,&argv[i][2]);
                         if(!p)
                             k++;
