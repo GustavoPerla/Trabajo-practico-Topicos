@@ -408,7 +408,7 @@ void rotar_total(FILE* arch,t_pixel** mat,int32_t fila,int32_t col,size_t ini){
     for(int i=fila-1;i>=0;i--){
         for(int j=col-1;j>=0;j--)
             fwrite(&mat[i][j].pixel,3,1,arch);
-        pad(fila,arch);
+        pad(col,arch);
     }
 }
 
